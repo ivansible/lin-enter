@@ -1,0 +1,353 @@
+---
+# FIXME comment here and in README (Implementaion Details)
+# explain why we:
+# - use wait_for_connection
+#     because all other methods are subject to UNREACHABLE errors
+# - override with ansible_ssh_user instead of ansible_user
+#     because former override does not work in a var: under loop
+# - what is 'unreachable' vs other network problems
+#     'unreachable' can happen if we use a wrong ssh key
+# - trick with 'failed_when' could speed up python search
+# - dont use trick with `failed_when` and /no_such_python
+#     because wait_for_connection hides ping output
+# - dont use async:1 poll:0 (add link to stackoverflow)
+#   link to stackoverflow:
+#     https://stackoverflow.com/q/23877781
+#     https://stackoverflow.com/questions/23877781/how-to-wait-for-server-restart-using-ansible
+#   but async/poll does not work with 'raw' and 'ping'
+# - dont use blocks and 'rescue', links to:
+#   "blocks rescue from unreachable host"
+#      https://github.com/ansible/ansible/issues/13870
+#      (proposed feature to recover after unreachable error)
+#   "abort/fail is host is unreachable"
+#      https://github.com/ansible/ansible/issues/18782
+#      (exactly opposite behavior - abort all hosts in playbook)
+#
+# This role requires jmespath
+
+- debug:
+    msg: "Probing login methods with python {{ try_python or 'default' }}"
+
+
+# ========= (1) try default user with different pythons
+
+- name: init iterator
+  set_fact:
+    try_user: { failed: true }
+
+- name: (1) try default user with different pythons
+  wait_for_connection:
+    timeout: "{{ linen_wait_timeout }}"
+  vars:
+    ansible_ssh_port: "{{ found_port }}"
+    ansible_python_interpreter: "{{ item or orig_python }}"
+  ignore_errors: yes
+  register: try_user
+  # Empty item means "item not found -> skip" in blocks of this unit,
+  # but in this block the empty try_python item means "try all pythons".
+  when: "found_user == '-'
+         and try_user is not successful
+         and try_python == ''
+         and '1' in linen_login_methods"
+  loop: "{{ linen_try_real_pythons }}"
+
+- name: extract ok items
+  set_fact:
+    ok_items: "{{ try_user.results | json_query('[?!skipped]|[?!failed].item') }}"
+
+- name: save new facts
+  set_fact:
+    found_user: "{{ orig_user }}"
+    found_pass: "{{ orig_pass }}"
+    found_keyfile: "{{ orig_keyfile }}"
+    found_python: "{{ ok_items | first | default(orig_python,true) }}"
+  when: "found_user == '-' and ok_items"
+
+
+# ========= (2) try default user with custom keyfile
+
+- name: (2) try default user with custom keyfile
+  wait_for_connection:
+    timeout: "{{ linen_wait_timeout }}"
+  vars:
+    ansible_ssh_port: "{{ found_port }}"
+    ansible_private_key_file: "{{ linen_keyfile }}"
+    ansible_python_interpreter: "{{ try_python or orig_python }}"
+  ignore_errors: yes
+  register: try_user
+  when: "found_user == '-'
+         and linen_keyfile != ''
+         and '2' in linen_login_methods"
+  loop:
+    - ""
+
+- name: extract ok items
+  set_fact:
+    ok_items: "{{ try_user.results | json_query('[?!skipped]|[?!failed].item') }}"
+
+- name: save new facts
+  set_fact:
+    found_user: "{{ ok_items | first }}"
+    found_pass: "{{ orig_pass }}"
+    found_keyfile: "{{ linen_keyfile }}"
+    found_python: "{{ try_python | default(orig_python,true) }}"
+  when: "found_user == '-' and ok_items"
+
+
+# ========= (3) try default user with password and different pythons
+
+- name: init iterator
+  set_fact:
+    try_user: { failed: true }
+
+- name: (3) try default user with password and different pythons
+  wait_for_connection:
+    timeout: "{{ linen_wait_timeout }}"
+  vars:
+    ansible_ssh_pass: "{{ linen_pass }}"
+    ansible_ssh_port: "{{ found_port }}"
+    ansible_python_interpreter: "{{ item or orig_python }}"
+  ignore_errors: yes
+  register: try_user
+  # Empty item means "item not found -> skip" in blocks of this unit,
+  # but in this block the empty try_python item means "try all pythons".
+  when: "found_user == '-'
+         and try_user is not successful
+         and try_python == ''
+         and linen_pass != ''
+         and '3' in linen_login_methods"
+  loop: "{{ linen_try_real_pythons }}"
+
+- name: extract ok items
+  set_fact:
+    ok_items: "{{ try_user.results | json_query('[?!skipped]|[?!failed].item') }}"
+
+- name: save new facts
+  set_fact:
+    found_user: "{{ orig_user }}"
+    found_pass: "{{ linen_pass }}"
+    found_keyfile: ""
+    found_python: "{{ ok_items | first | default(orig_python,true) }}"
+  when: "found_user == '-' and ok_items"
+
+
+# ========= (4) try root with password and different pythons
+
+- name: init iterator
+  set_fact:
+    try_user: { failed: true }
+
+- name: (4) try root with password and different pythons
+  wait_for_connection:
+    timeout: "{{ linen_wait_timeout }}"
+  vars:
+    ansible_ssh_user: root
+    ansible_ssh_pass: "{{ linen_pass }}"
+    ansible_ssh_port: "{{ found_port }}"
+    ansible_python_interpreter: "{{ item or orig_python }}"
+  ignore_errors: yes
+  register: try_user
+  # Empty item means "item not found -> skip" in blocks of this unit,
+  # but in this block the empty try_python item means "try all pythons".
+  when: "found_user == '-'
+         and try_user is not successful
+         and try_python == ''
+         and linen_pass != ''
+         and '4' in linen_login_methods"
+  loop: "{{ linen_try_real_pythons }}"
+
+- name: extract ok items
+  set_fact:
+    ok_items: "{{ try_user.results | json_query('[?!skipped]|[?!failed].item') }}"
+
+- name: save new facts
+  set_fact:
+    found_user: root
+    found_pass: "{{ linen_pass }}"
+    found_keyfile: ""
+    found_python: "{{ ok_items | first | default(orig_python,true) }}"
+  when: "found_user == '-' and ok_items"
+
+
+# ========= (5) try other user names with default settings
+
+- name: init iterator
+  set_fact:
+    try_user: { failed: true }
+
+- name: (5) try other user names with default settings
+  wait_for_connection:
+    timeout: "{{ linen_wait_timeout }}"
+  vars:
+    ansible_ssh_user: "{{ item }}"
+    ansible_ssh_port: "{{ found_port }}"
+    ansible_python_interpreter: "{{ try_python or orig_python }}"
+  ignore_errors: yes
+  register: try_user
+  when: "found_user == '-'
+         and try_user is not successful
+         and item != ''
+         and '5' in linen_login_methods"
+  loop: "{{ linen_try_users }}"
+
+- name: extract ok items
+  set_fact:
+    ok_items: "{{ try_user.results | json_query('[?!skipped]|[?!failed].item') }}"
+
+- name: save new facts
+  set_fact:
+    found_user: "{{ ok_items | first }}"
+    found_pass: "{{ orig_pass }}"
+    found_keyfile: "{{ orig_keyfile }}"
+    found_python: "{{ try_python | default(orig_python,true) }}"
+  when: "found_user == '-' and ok_items"
+
+
+# ========= (6) try other user names with custom keyfile
+
+- name: init iterator
+  set_fact:
+    try_user: { failed: true }
+
+- name: (6) try other user names with custom keyfile
+  wait_for_connection:
+    timeout: "{{ linen_wait_timeout }}"
+  vars:
+    ansible_ssh_user: "{{ item }}"
+    ansible_ssh_port: "{{ found_port }}"
+    ansible_private_key_file: "{{ linen_keyfile }}"
+    ansible_python_interpreter: "{{ try_python or orig_python }}"
+  ignore_errors: yes
+  register: try_user
+  when: "found_user == '-'
+         and try_user is not successful
+         and item != ''
+         and linen_keyfile != ''
+         and '6' in linen_login_methods"
+  loop: "{{ linen_try_users }}"
+
+- name: extract ok items
+  set_fact:
+    ok_items: "{{ try_user.results | json_query('[?!skipped]|[?!failed].item') }}"
+
+- name: save new facts
+  set_fact:
+    found_user: "{{ ok_items | first }}"
+    found_pass: "{{ orig_pass }}"
+    found_keyfile: "{{ linen_keyfile }}"
+    found_python: "{{ try_python | default(orig_python,true) }}"
+  when: "found_user == '-' and ok_items"
+
+
+# ========= (7) try other user names with password
+
+- name: init iterator
+  set_fact:
+    try_user: { failed: true }
+
+- name: (7) try other user names with custom keyfile
+  wait_for_connection:
+    timeout: "{{ linen_wait_timeout }}"
+  vars:
+    ansible_ssh_user: "{{ item }}"
+    ansible_ssh_pass: "{{ linen_pass }}"
+    ansible_ssh_port: "{{ found_port }}"
+    ansible_python_interpreter: "{{ try_python or orig_python }}"
+  ignore_errors: yes
+  register: try_user
+  when: "found_user == '-'
+         and try_user is not successful
+         and item != ''
+         and linen_pass != ''
+         and '7' in linen_login_methods"
+  loop: "{{ linen_try_users }}"
+
+- name: extract ok items
+  set_fact:
+    ok_items: "{{ try_user.results | json_query('[?!skipped]|[?!failed].item') }}"
+
+- name: save new facts
+  set_fact:
+    found_user: "{{ ok_items | first }}"
+    found_pass: "{{ orig_pass }}"
+    found_keyfile: ""
+    found_python: "{{ try_python | default(orig_python,true) }}"
+  when: "found_user == '-' and ok_items"
+
+
+# ========= (8) try vagrant with insecure key
+
+- name: init iterator
+  set_fact:
+    try_user: { failed: true }
+
+- name: (8) try vagrant with insecure key
+  wait_for_connection:
+    timeout: "{{ linen_wait_timeout }}"
+  vars:
+    ansible_ssh_user: "{{ item }}"
+    ansible_private_key_file: "{{ linen_vagrant_keyfile }}"
+    ansible_ssh_port: "{{ found_port }}"
+    ansible_python_interpreter: "{{ try_python or orig_python }}"
+  ignore_errors: yes
+  register: try_user
+  when: "found_user == '-'
+         and try_user is not successful
+         and item != ''
+         and '8' in linen_login_methods"
+  loop:
+    - vagrant
+    - root
+
+- name: extract ok items
+  set_fact:
+    ok_items: "{{ try_user.results | json_query('[?!skipped]|[?!failed].item') }}"
+
+- name: save new facts
+  set_fact:
+    found_user: "{{ ok_items | first }}"
+    found_pass: ""
+    found_keyfile: "{{ linen_vagrant_keyfile }}"
+    found_python: "{{ try_python | default(orig_python,true) }}"
+  when: "found_user == '-' and ok_items"
+
+
+# ========= (9) try vagrant with password
+
+- name: init iterator
+  set_fact:
+    try_user: { failed: true }
+
+- name: (9) try vagrant with password
+  wait_for_connection:
+    timeout: "{{ linen_wait_timeout }}"
+  vars:
+    ansible_ssh_user: "{{ item }}"
+    ansible_ssh_pass: "{{ linen_vagrant_password }}"
+    ansible_ssh_port: "{{ found_port }}"
+    ansible_python_interpreter: "{{ try_python or orig_python }}"
+  ignore_errors: yes
+  register: try_user
+  when: "found_user == '-'
+         and try_user is not successful
+         and item != ''
+         and '9' in linen_login_methods"
+  loop:
+    - vagrant
+    - root
+
+- name: extract ok items
+  set_fact:
+    ok_items: "{{ try_user.results | json_query('[?!skipped]|[?!failed].item') }}"
+
+- name: save new facts
+  set_fact:
+    found_user: "{{ ok_items | first }}"
+    found_pass: "{{ linen_vagrant_password }}"
+    found_keyfile: ""
+    found_python: "{{ try_python | default(orig_python,true) }}"
+  when: "found_user == '-' and ok_items"
+
+
+# ========= done
+...

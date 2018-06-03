@@ -1,2 +1,42 @@
 ---
-# defaults file for ivansible.lin-enter
+# defaults for ivansible.lin-enter
+linen_user: ""
+linen_pass: ""
+linen_port: ""
+linen_keyfile: ""
+
+linen_conn_timeout: 3
+linen_port_timeout: 5
+linen_wait_timeout: 3
+
+# default password for vagrant boxes
+linen_vagrant_password: vagrant
+
+# vagrant uses this key by default;
+# you should copy it from this role to your iventory.
+linen_vagrant_keyfile: files/secret/vagrant-insecure.key
+
+# this path is hardcoded in ansible
+linen_default_python: /usr/bin/python
+
+# user probe list
+linen_try_users:
+  - "{{ linen_user }}"
+  - root
+  - ubuntu
+
+# port probe list
+linen_try_ports:
+  - "{{ ansible_port | default(0) }}"
+  - "{{ ansible_ssh_port | default(0) }}"
+  - "{{ linen_port | default(0) }}"
+  - 22
+
+# python probe list
+linen_try_pythons:
+  - /usr/bin/python3
+  - "{{ linen_default_python }}"
+
+# probe method mask for debugging
+linen_login_methods: "123456789"
+...

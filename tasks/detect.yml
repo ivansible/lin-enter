@@ -1,0 +1,84 @@
+---
+- debug:
+    msg: "Detecting connection method..."
+
+# Purge local ARP cache on controller before trying TCP connection.
+# This step prevents network errors with ever-changing Vagrant boxes.
+
+- name: purge local arp cache
+  command: arp -d "{{ ansible_host }}"
+  connection: local
+  become: true
+  changed_when: false
+  failed_when: false
+
+# SSH fails to connect if private key has mode other than 0600.
+# If this step fails with "file not found", please manually copy the
+# `file/secret/*.key` files from this role to playbook or inventory.
+- name: fix permissions of local vagrant key file
+  file:
+    path: "{{ linen_vagrant_keyfile }}"
+    mode: 0600
+  connection: local
+  become: false
+
+- name: remove explicit inventory python from the search list
+  # Please note that inventory python will still be probed,
+  # but it is encoded by an empty item prepended to the list.
+  set_fact:
+    linen_try_real_pythons:
+      "{{ ([''] + linen_try_pythons) | reject('equalto',orig_python) | list }}"
+
+
+# =========================
+# Probe multiple SSH ports
+
+- set_fact:
+    try_port: { failed: true }
+
+- name: try next ssh port
+  wait_for:
+    host: "{{ ansible_host }}"
+    port: "{{ item }}"
+    state: present
+    search_regex: SSH
+    connect_timeout: "{{ linen_conn_timeout }}"
+    timeout: "{{ linen_port_timeout }}"
+  connection: local
+  ignore_errors: yes
+  register: try_port
+  when: "item not in ['','0',0] and try_port is not successful
+         and found_port == '-'"
+  loop: "{{ linen_try_ports }}"
+
+- set_fact:
+    found_port: "{{ try_port.results | json_query(\"[?state=='present'].port\")
+                  | default(['-'],true) | first }}"
+  when: "found_port == '-'"
+
+- assert:
+    that: "found_port != '-'"
+    msg: "[{{ inventory_hostname }}] Cannot ping SSH on any port! Aborting."
+
+- debug:
+    msg: "Found SSH on port {{ found_port }} !.."
+
+
+# ===================================================
+# Probe different usernames, passwords and SSH keys.
+
+- include_tasks: probe.yml
+  loop: "{{ linen_try_real_pythons }}"
+  loop_control:
+    loop_var: try_python
+  # Ansible does check a 'when' condition *for* every iteration, but
+  # performs these checks only at loop initialization. Hence, conditions
+  # are not reasserted *on* the next iteration, so the check below does
+  # *not* skip remaining loops after a successful finding. Life is pain.
+  #when: "found_user == '-' or found_python == '-'"
+
+- assert:
+    that: "found_user != '-' and found_python != '-'"
+    msg: "[{{ inventory_hostname }}] Cannot detect user / python! Aborting."
+
+...

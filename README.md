@@ -5,8 +5,8 @@ Fix SSH port, username, python interpreter of remote host.
 
 ## Requirements
 
-None
-
+Playbook setting `gather_facts` should be set to false when running this role
+because it will fail if the Ansible SSH port is not set correctly.
 
 ## Variables
 

@@ -1,2 +1,85 @@
 ---
-# tasks file for ivansible.lin-enter
+#===================
+# 1. scan inventory
+
+- name: read inventory settings
+  set_fact:
+    orig_user: "{{ ansible_user | default('') }}"
+    orig_port: "{{ ansible_port | default('') }}"
+    orig_pass: "{{ ansible_password | default('') }}"
+    orig_keyfile: "{{ ansible_private_key_file | default('') }}"
+    orig_python: "{{ ansible_python_interpreter
+                   | default(linen_default_python) }}"
+
+- name: reset found facts
+  set_fact:
+    found_user: "-"
+    found_port: "-"
+    found_python: "-"
+    found_pass: ""
+    found_keyfile: ""
+
+#=============================
+# 2. investigate connectivity
+
+- name: disable hostkey checking
+  set_fact:
+    ansible_ssh_host_key_checking: false
+
+- name: investigate connection problems
+  block:
+    - name: check for problems with ssh port and username
+      wait_for_connection:
+        timeout: "{{ linen_wait_timeout }}"
+
+    - name: check for problems with python interpreter
+      ping:
+  rescue:
+    - name: detect the best connection method
+      import_tasks: detect.yml
+
+    - debug:
+        msg:
+          - "Detected connection:"
+          - "- port: {{ found_port | default('-',true) }}"
+          - "- user: {{ found_user | default('-',true) }}"
+          - "- pass: {{ found_pass | default('-',true) }}"
+          - "- keyfile: {{ found_keyfile | default('-',true) }}"
+          - "- python: {{ found_python | default('-',true) }}"
+
+    - set_fact:
+        ansible_user: "{{ found_user }}"
+        ansible_ssh_user: "{{ found_user }}"
+      when: "found_user not in ['','-',orig_user]"
+    - set_fact:
+        ansible_port: "{{ found_port }}"
+        ansible_ssh_port: "{{ found_port }}"
+      when: "found_port not in ['','-',orig_port]"
+    - set_fact:
+        ansible_password: "{{ found_pass }}"
+        ansible_ssh_pass: "{{ found_pass }}"
+      when: "found_pass not in ['','-',orig_pass]"
+    - set_fact:
+        ansible_private_key_file: "{{ found_keyfile }}"
+      when: "found_keyfile not in ['','-',orig_keyfile]"
+    - set_fact:
+        ansible_python_interpreter: "{{ found_python }}"
+      when: "found_python not in ['','-',orig_python]"
+
+    - ping:
+
+
+#======================
+# 3. adjust connection
+
+- name: disable pipelining before going root
+  set_fact:
+    ansible_pipelining: false
+
+- name: gather facts once connected
+  setup:
+
+- name: adjust connection settings
+  import_tasks: tune.yml
+  become: yes
+...
