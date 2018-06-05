@@ -1,0 +1,107 @@
+---
+- name: find, crate or rename user
+  block:
+    - name: set "user not changed" mark
+      set_fact:
+        can_move: "-"
+
+    - name: find or create new user
+      user:
+        name: "{{ new_user }}"
+        uid: "{{ desired_uid or omit }}"
+      register: user_data
+  rescue:
+    # fail instantly if error is not about non-unique id
+    - assert:
+        that: "desired_uid != 0"
+        msg:
+          - "Error creating new user:"
+          - "{{ user_data.msg | default(user_data) }}"
+
+    - name: find competing user entry
+      getent:
+        database: passwd
+        key: "{{ desired_uid }}"
+    - set_fact:
+        old_user: "{{ ansible_facts.getent_passwd | list | first }}"
+    - set_fact:
+        old_uid: "{{ ansible_facts.getent_passwd[old_user][1] }}"
+        old_home: "{{ ansible_facts.getent_passwd[old_user][4] }}"
+        new_home: "/home/{{ new_user }}"
+        can_move: "{{ old_user in linen_scratch_users }}"
+
+    - assert:
+        that: "old_uid == desired_uid"
+        msg:
+          - "Assertion error when creating user:"
+          - "{{ old_uid }} != {{ desired_uid }}"
+          - "{{ user_data.msg | default(user_data) }}"
+
+    - debug:
+        msg:
+          - "Warning: renaming an existing user"
+          - "- uid: {{ desired_uid }}"
+          - "- old user: {{ old_user }}"
+          - "- new user: {{ new_user }}"
+          - "- old home: {{ old_home }}"
+          - "- new home: {{ new_home }}"
+      when: can_move == true
+    - debug:
+        msg:
+          - "Warning: creating a new user"
+          - "- old user: {{ new_user }}"
+          - "- new user: {{ new_user }}"
+          - "- uid: {{ desired_uid }}"
+          - "- renaming: {{ can_move }}"
+      when: can_move == false
+    - pause:
+        seconds: "{{ linen_pause_timeout }}"
+
+    - name: rename user
+      include_tasks: rename.yml
+      when: can_move == true
+      tags: linen_rename_user
+
+    - name: find renamed or create new user with free id
+      user:
+        name: "{{ new_user }}"
+        non_unique: yes
+      register: user_data
+
+    - block:
+        - name: switch connection to created user
+          set_fact:
+            ansible_ssh_user: "{{ new_user }}"
+
+        - name: wait for reconnection
+          wait_for_connection:
+            timeout: "{{ linen_wait_timeout }}"
+          register: result
+          until: result is successful
+          retries: "{{ linen_conn_retries }}"
+      # when user is renamed, reconnection happens in rename.yml
+      when: user_data is changed
+  tags: linen_create_or_rename_user
+
+
+- name: add user to the sudoers group
+  user:
+    name: "{{ new_user }}"
+    append: yes
+    groups: sudo
+
+- name: update ansible user name (postpone full setup)
+  set_fact:
+    ansible_user_id: "{{ new_user }}"
+
+
+- set_fact:
+    uid_ok: "{{ desired_uid
+              | ternary(user_data.uid | int == desired_uid | int, true) }}"
+- debug:
+    msg: "Success: user {{ new_user }} has uid {{ desired_uid }}"
+  when: uid_ok == true
+- debug:
+    msg: "Notice: user {{ new_user }} has uid {{ user_data.uid }} (wanted {{ desired_uid }})"
+  when: uid_ok == false
+...

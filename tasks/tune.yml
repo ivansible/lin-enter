@@ -1,4 +1,85 @@
 ---
+- name: read settings
+  set_fact:
+    new_port: "{{ linen_new_port
+                | default(orig_port, true)
+                | default(linen_port, true)
+                | default(ansible_ssh_port, true) }}"
+    new_user: "{{ linen_new_user
+                | default(orig_user, true)
+                | default(linen_user, true)
+                | default(ansible_user_id) }}"
+    new_keyfile: "{{ linen_new_keyfile
+                   | default(orig_keyfile, true)
+                   | default(linen_keyfile, true)
+                   | default(ansible_private_key_file, true) }}"
+    desired_uid: "{{ (linen_desired_uid | string in ['','0','no','false'])
+                   | ternary(0, linen_desired_uid | int) }}"
+  tags: linen_settings
+
 - debug:
-    msg: "Tuning..."
+    msg:
+      - "New settings:"
+      - "- port: {{ new_port }}"
+      - "- user: {{ new_user }}"
+      - "- keyfile: {{ new_keyfile }}"
+      - "- uid (optional): {{ desired_uid }}"
+  tags: linen_settings
+- pause:
+    seconds: "{{ linen_pause_timeout }}"
+  tags: linen_settings
+
+- name: validate new user
+  assert:
+    that: "new_user not in ['','-','root']"
+    msg: "user name is invalid: {{ new_user }}"
+
+
+- name: remove requiretty from sudoers
+  lineinfile:
+    dest: /etc/sudoers
+    regexp: '^(Defaults\s+requiretty.*)'
+    state: absent
+    backup: yes
+  tags: linen_requiretty
+
+- name: restore pipelining once requiretty is ok
+  set_fact:
+    ansible_ssh_pipelining: "{{ lookup('config', 'ANSIBLE_PIPELINING') }}"
+  tags: linen_requiretty
+
+
+- name: setup new ssh port
+  import_tasks: ssh.yml
+  tags: linen_ssh_port
+
+
+- name: enable password-less sudo in advance
+  copy:
+    content: |
+      # Allow sudo group members to execute commands without password
+      %sudo  ALL=(ALL) NOPASSWD:ALL
+      {{ new_user }}  ALL=(ALL) NOPASSWD:ALL
+    dest: /etc/sudoers.d/99-nopasswd
+    owner: root
+    mode: 0440
+  tags: linen_nopasswd
+
+- name: manage login user
+  import_tasks: user.yml
+  tags: linen_user
+
+- name: remove old-style no-passwd file
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/sudoers.d/99_vagrant
+    - /etc/sudoers.d/99_vanko
+  tags: linen_nopasswd
+
+
+- name: manage ssh keys
+  import_tasks: keys.yml
+  tags: linen_ssh_keys
 ...

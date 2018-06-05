@@ -67,6 +67,19 @@
 # ===================================================
 # Probe different usernames, passwords and SSH keys.
 
+- name: fix permissions on local key files (for ssh)
+  file:
+    path: "{{ item }}"
+    mode: 0600
+  when: "item != ''"
+  loop:
+    - "{{ orig_keyfile }}"
+    - "{{ linen_keyfile }}"
+    - "{{ linen_new_keyfile }}"
+    - "{{ linen_vagrant_keyfile }}"
+  connection: local
+  ignore_errors: yes
+
 - include_tasks: probe.yml
   loop: "{{ linen_try_real_pythons }}"
   loop_control:
@@ -80,5 +93,4 @@
 - assert:
     that: "found_user != '-' and found_python != '-'"
     msg: "[{{ inventory_hostname }}] Cannot detect user / python! Aborting."
-
 ...

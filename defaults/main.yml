@@ -1,13 +1,32 @@
 ---
-# defaults for ivansible.lin-enter
+# settings to probe for (and probably setup)
 linen_user: ""
 linen_pass: ""
 linen_port: ""
 linen_keyfile: ""
 
+# settings to setup (only if differ from above)
+linen_new_user: ""
+linen_new_port: ""
+linen_new_keyfile: ""
+
+# refer to README on this one
+linen_secure: true
+
+# attempt to adjust user to this uid
+linen_desired_uid: 1000
+
+# these users can be renamed
+linen_scratch_users:
+  - ubuntu
+  - vagrant
+
+# timeouts
 linen_conn_timeout: 3
 linen_port_timeout: 5
 linen_wait_timeout: 3
+linen_conn_retries: 3
+linen_pause_timeout: 3
 
 # default password for vagrant boxes
 linen_vagrant_password: vagrant
@@ -39,4 +58,8 @@ linen_try_pythons:
 
 # probe method mask for debugging
 linen_login_methods: "123456789"
+
+# internal settings
+linen_use_quick_way: true
+linen_expose_changes: false
 ...

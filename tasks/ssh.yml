@@ -1,0 +1,52 @@
+---
+- name: configure new ssh port
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^Port"
+    line: "Port {{new_port}}"
+  register: ssh_config
+
+- name: allow new port through ubuntu firewall in advance
+  ufw:
+    rule: allow
+    port: "{{ new_port }}"
+    proto: tcp
+  when: "linen_secure | bool == true"
+  tags: linen_firewall
+
+- name: restart ssh
+  systemd:
+    name: ssh
+    state: restarted
+  when: ssh_config is changed
+
+- name: switch connection to new port
+  set_fact:
+    ansible_ssh_port: "{{ new_port }}"
+
+- name: reconnect after switching ports
+  block:
+    - name: wait for reconnection
+      wait_for_connection:
+        timeout: "{{ linen_wait_timeout }}"
+      register: result
+      until: result is successful
+      retries: "{{ linen_conn_retries }}"
+  when: ssh_config is changed
+
+- name: enable ubuntu firewall
+  ufw:
+    state: enabled
+  when: "linen_secure | bool == true"
+  tags: linen_firewall
+
+- name: test connection with new port
+  ping:
+  when: ssh_config is changed
+
+- debug:
+    msg:
+      - "Warning: old SSH port {{ found_port }} is left open!"
+  when: "linen_secure | bool == true and ssh_config is changed"
+  tags: linen_firewall
+...

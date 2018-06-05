@@ -71,7 +71,7 @@
     timeout: "{{ linen_wait_timeout }}"
   vars:
     ansible_ssh_port: "{{ found_port }}"
-    ansible_private_key_file: "{{ linen_keyfile }}"
+    ansible_ssh_private_key_file: "{{ linen_keyfile }}"
     ansible_python_interpreter: "{{ try_python or orig_python }}"
   ignore_errors: yes
   register: try_user
@@ -215,7 +215,7 @@
   vars:
     ansible_ssh_user: "{{ item }}"
     ansible_ssh_port: "{{ found_port }}"
-    ansible_private_key_file: "{{ linen_keyfile }}"
+    ansible_ssh_private_key_file: "{{ linen_keyfile }}"
     ansible_python_interpreter: "{{ try_python or orig_python }}"
   ignore_errors: yes
   register: try_user
@@ -286,7 +286,7 @@
     timeout: "{{ linen_wait_timeout }}"
   vars:
     ansible_ssh_user: "{{ item }}"
-    ansible_private_key_file: "{{ linen_vagrant_keyfile }}"
+    ansible_ssh_private_key_file: "{{ linen_vagrant_keyfile }}"
     ansible_ssh_port: "{{ found_port }}"
     ansible_python_interpreter: "{{ try_python or orig_python }}"
   ignore_errors: yes

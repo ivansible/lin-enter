@@ -1,0 +1,53 @@
+---
+- name: fix permissions on local key files (for ssh-keygen)
+  file:
+    path: "{{ item }}"
+    mode: 0600
+  when: "item != ''"
+  loop:
+    - "{{ new_keyfile }}"
+    - "{{ linen_vagrant_keyfile }}"
+  connection: local
+
+- name: authorize my public keys
+  authorized_key:
+    # ansible_user_id should have been updated to new user
+    user: "{{ ansible_user_id }}"
+    key: "{{ lookup('pipe', 'ssh-keygen -y -f \"{{ item }}\"') }}"
+    comment: "{{ new_keyfile | basename }}"
+    state: present
+  when: "item != ''"
+  loop:
+    - "{{ new_keyfile }}"
+
+- name: remove insecure (vagrant) keys
+  block:
+    - name: switch to new key before removing insecure keys
+      set_fact:
+        ansible_ssh_private_key_file: "{{ new_keyfile }}"
+      when: "found_keyfile in [linen_vagrant_keyfile]"
+
+    - name: remove insecure keys
+      authorized_key:
+        # ansible_user_id should have been updated to new user
+        user: "{{ ansible_user_id }}"
+        key: "{{ lookup('pipe', 'ssh-keygen -y -f \"{{ item }}\"') }}"
+        state: absent
+      when: "item != ''"
+      loop:
+        - "{{ linen_vagrant_keyfile }}"
+      register: remove_keys
+
+    - name: reconnect after removing keys
+      block:
+        - name: wait for reconnection
+          wait_for_connection:
+            timeout: "{{ linen_wait_timeout }}"
+          register: result
+          until: result is successful
+          retries: "{{ linen_conn_retries }}"
+      when: remove_keys is changed
+  # do not remove keys if they were just added
+  when: "linen_secure | bool == true
+         and linen_vagrant_keyfile not in [new_keyfile]"
+...

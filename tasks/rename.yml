@@ -1,0 +1,144 @@
+---
+- name: rename user in system files (slow way)
+  block:
+    - name: fix user name and home in passwd files
+      replace:
+        regexp: "{{ item.0.src }}"
+        replace: "{{ item.0.dst }}"
+        path: "{{ item.1 }}"
+      with_nested:
+        - - { src: "^{{ old_user }}:",
+              dst: "{{ new_user }}:" }
+          - { src: ":{{ old_home }}:",
+              dst: ":{{ new_home }}:" }
+        - - /etc/passwd
+          - /etc/passwd-
+          - /etc/subuid
+          - /etc/subgid
+      loop_control:
+        label: "{{ item.1 }} {{ item.0.src }}"
+
+    - name: fix user name in group files
+      replace:
+        regexp: "{{ item.0.src }}"
+        replace: "{{ item.0.dst }}"
+        path: "{{ item.1 }}"
+      with_nested:
+        - - { src: "^{{ old_user }}:",
+              dst: "{{ new_user }}:" }
+          - { src: ":{{ old_user }}$",
+              dst: ":{{ new_user }}" }
+          - { src: ",{{ old_user }}$",
+              dst: ",{{ new_user }}" }
+        - - /etc/group
+          - /etc/group-
+          - /etc/shadow
+          - /etc/shadow-
+          - /etc/gshadow
+          - /etc/gshadow-
+      loop_control:
+        label: "{{ item.1 }} {{ item.0.src }}"
+
+    - name: get list of sudoers files
+      find:
+        path: /etc/sudoers.d
+        excludes: README
+      register: sudoers_files
+
+    - name: fix user name in sudoers files
+      replace:
+        regexp: "^{{ old_user }}"
+        replace: "{{ new_user }}"
+        path: "{{ item }}"
+      with_flattened:
+        - /etc/sudoers
+        - "{{ sudoers_files | json_query('files[].path') }}"
+      loop_control:
+        label: "{{ item }} ^{{ old_user }}"
+  when: "linen_use_quick_way | bool == false"
+
+
+- name: rename user in system files (quick way)
+  block:
+    - name: fix user name and home in passwd files
+      command: >
+        sed -i
+            -e 's!^{{ old_user }}:!{{ new_user }}:!'
+            -e 's!:/home/{{ old_user }}:!:/home/{{ new_user }}:!'
+          /etc/passwd
+          /etc/passwd-
+          /etc/subuid
+          /etc/subgid
+      changed_when: "linen_expose_changes | bool == true"
+
+    - name: fix user name in group files
+      command: >
+        sed -i
+            -e 's!^{{ old_user }}:!{{ new_user }}:!'
+            -e 's!:{{ old_user }}$!:{{ new_user }}!'
+            -e 's!,{{ old_user }}$!,{{ new_user }}!'
+          /etc/group
+          /etc/group-
+          /etc/shadow
+          /etc/shadow-
+          /etc/gshadow
+          /etc/gshadow-
+      changed_when: "linen_expose_changes | bool == true"
+
+    - name: fix user name in sudoers files
+      shell:
+        sed -i
+            -e 's!^{{ old_user }}!{{ new_user }}!'
+          /etc/sudoers
+          /etc/sudoers.d/*
+      changed_when: "linen_expose_changes | bool == true"
+  when: "linen_use_quick_way | bool == true"
+
+
+# 'raw' is better becase 'command'/'shell' modules depend on home directory
+# 'async'+'poll' prevents the unreachable error, but incompatible with 'raw'
+# after testing many combinations, 'command' is the only viable alternative
+- name: move home directory
+  command: mv "{{ old_home }}" "{{ new_home }}"
+  args:
+    removes: "{{ old_home }}"
+    creates: "{{ new_home }}"
+  ignore_errors: yes
+  register: move_home_result
+
+
+# reconnect early after directory has moved
+- name: switch connection to renamed user
+  set_fact:
+    ansible_ssh_user: "{{ new_user }}"
+
+- name: wait for reconnection
+  wait_for_connection:
+    timeout: "{{ linen_wait_timeout }}"
+  register: result
+  until: result is successful
+  retries: "{{ linen_conn_retries }}"
+
+
+- name: stat the new home directory
+  stat:
+    path: "{{ new_home }}"
+  register: new_home_state
+
+- assert:
+    that: "new_home_state.stat.exists and new_home_state.stat.isdir"
+    msg:
+      - "There was an error moving home directory"
+      - "{{ move_home_result.msg | default(move_home_result) }}"
+
+- name: ensure old directory is removed
+  file:
+    path: "{{ old_home }}"
+    state: absent
+
+- name: remove temporary files in the new directory
+  file:
+    path: "{{ new_home }}/.ansible"
+    state: absent
+  ignore_errors: yes
+...
