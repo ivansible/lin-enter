@@ -71,12 +71,12 @@
     timeout: "{{ linen_wait_timeout }}"
   vars:
     ansible_ssh_port: "{{ found_port }}"
-    ansible_ssh_private_key_file: "{{ linen_keyfile }}"
+    ansible_ssh_private_key_file: "{{ linen_keyfile_ }}"
     ansible_python_interpreter: "{{ try_python or orig_python }}"
   ignore_errors: yes
   register: try_user
   when: "found_user == '-'
-         and linen_keyfile != ''
+         and linen_keyfile_ != ''
          and '2' in linen_login_methods"
   loop:
     - ""
@@ -89,7 +89,7 @@
   set_fact:
     found_user: "{{ ok_items | first }}"
     found_pass: "{{ orig_pass }}"
-    found_keyfile: "{{ linen_keyfile }}"
+    found_keyfile: "{{ linen_keyfile_ }}"
     found_python: "{{ try_python | default(orig_python,true) }}"
   when: "found_user == '-' and ok_items"
 
@@ -215,14 +215,14 @@
   vars:
     ansible_ssh_user: "{{ item }}"
     ansible_ssh_port: "{{ found_port }}"
-    ansible_ssh_private_key_file: "{{ linen_keyfile }}"
+    ansible_ssh_private_key_file: "{{ linen_keyfile_ }}"
     ansible_python_interpreter: "{{ try_python or orig_python }}"
   ignore_errors: yes
   register: try_user
   when: "found_user == '-'
          and try_user is not successful
          and item != ''
-         and linen_keyfile != ''
+         and linen_keyfile_ != ''
          and '6' in linen_login_methods"
   loop: "{{ linen_try_users }}"
 
@@ -234,7 +234,7 @@
   set_fact:
     found_user: "{{ ok_items | first }}"
     found_pass: "{{ orig_pass }}"
-    found_keyfile: "{{ linen_keyfile }}"
+    found_keyfile: "{{ linen_keyfile_ }}"
     found_python: "{{ try_python | default(orig_python,true) }}"
   when: "found_user == '-' and ok_items"
 

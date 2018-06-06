@@ -9,10 +9,11 @@
                 | default(orig_user, true)
                 | default(linen_user, true)
                 | default(ansible_user_id) }}"
-    new_keyfile: "{{ linen_new_keyfile
+    new_keyfile: "{{ linen_new_keyfile_
                    | default(orig_keyfile, true)
-                   | default(linen_keyfile, true)
-                   | default(ansible_private_key_file, true) }}"
+                   | default(linen_keyfile_, true)
+                   | default(ansible_private_key_file, true)
+                   | default('') }}"
     desired_uid: "{{ (linen_desired_uid | string in ['','0','no','false'])
                    | ternary(0, linen_desired_uid | int) }}"
   tags: linen_settings

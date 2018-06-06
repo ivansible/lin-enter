@@ -10,6 +10,9 @@ linen_new_user: ""
 linen_new_port: ""
 linen_new_keyfile: ""
 
+# this can make command line shorter
+linen_default_keyfile: ""
+
 # refer to README on this one
 linen_secure: true
 

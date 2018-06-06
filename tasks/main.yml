@@ -10,6 +10,10 @@
     orig_keyfile: "{{ ansible_private_key_file | default('') }}"
     orig_python: "{{ ansible_python_interpreter
                    | default(linen_default_python) }}"
+    linen_keyfile_: "{{ (linen_keyfile != 'default')
+                      | ternary(linen_keyfile, linen_default_keyfile) }}"
+    linen_new_keyfile_: "{{ (linen_new_keyfile != 'default')
+                          | ternary(linen_new_keyfile, linen_default_keyfile) }}"
   tags: linen_settings
 
 # when debugging, you can set these manually

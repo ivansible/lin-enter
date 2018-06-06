@@ -74,8 +74,8 @@
   when: "item != ''"
   loop:
     - "{{ orig_keyfile }}"
-    - "{{ linen_keyfile }}"
-    - "{{ linen_new_keyfile }}"
+    - "{{ linen_keyfile_ }}"
+    - "{{ linen_new_keyfile_ }}"
     - "{{ linen_vagrant_keyfile }}"
   connection: local
   ignore_errors: yes
