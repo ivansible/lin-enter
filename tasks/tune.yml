@@ -16,6 +16,8 @@
                    | default('') }}"
     desired_uid: "{{ (linen_desired_uid | string in ['','0','no','false'])
                    | ternary(0, linen_desired_uid | int) }}"
+    # always opt for python2 (temporary solution)
+    new_python: ""
   tags: linen_settings
 
 - debug:
@@ -23,7 +25,8 @@
       - "New settings:"
       - "- port: {{ new_port }}"
       - "- user: {{ new_user }}"
-      - "- keyfile: {{ new_keyfile }}"
+      - "- keyfile: {{ new_keyfile or '-' }}"
+      - "- python: {{ new_python or '-' }}"
       - "- uid (optional): {{ desired_uid }}"
   tags: linen_settings
 - pause:
@@ -83,4 +86,8 @@
 - name: manage ssh keys
   import_tasks: keys.yml
   tags: linen_ssh_keys
+
+- name: manage python
+  import_tasks: python.yml
+  tags: linen_python
 ...

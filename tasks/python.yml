@@ -1,0 +1,36 @@
+---
+# Current logic is simple: install python2 if not present.
+# In future, more methods will be implemented.
+- name: default is python2
+  set_fact:
+    found_python: ""
+  when: "found_python == linen_default_python"
+
+- name: change interpreter to python2
+  block:
+    - name: check that python2 is present
+      stat:
+        path: "{{ linen_default_python }}"
+        get_checksum: no
+      register: python2_binary
+
+    - name: install python2
+      block:
+        - name: apt without update (fast)
+          apt:
+            name: python
+      rescue:
+        - name: apt with update (slower)
+          apt:
+            name: python
+            update: yes
+      when: "python2_binary.stat.exists == false"
+
+    - name: switch connection to new python
+      set_fact:
+        new_python: ""
+        ansible_python_interpreter: "{{ linen_default_python }}"
+  # when: 1. have to update; 2. force python2 anyway :)
+  when: "found_python != new_python
+         or new_python != ''"
+...

@@ -4,6 +4,7 @@
 
 - name: read inventory settings
   set_fact:
+    orig_host: "{{ ansible_host | default(ansible_ssh_host) }}"
     orig_user: "{{ ansible_user | default(ansible_ssh_user) | default('') }}"
     orig_port: "{{ ansible_port | default(ansible_ssh_port) | default('') }}"
     orig_pass: "{{ ansible_password | default('') }}"
@@ -49,7 +50,7 @@
 
     - debug:
         msg:
-          - "Detected connection:"
+          - "Detected settings:"
           - "- port: {{ found_port | default('-',true) }}"
           - "- user: {{ found_user | default('-',true) }}"
           - "- pass: {{ found_pass | default('-',true) }}"
@@ -94,11 +95,35 @@
   become: yes
   tags: linen_tune
 
+
+#=========================
+# 4. print inventory info
+
 - block:
     - name: clear facts
       meta: clear_facts
+
     - name: gather facts as new user
       setup:
+
     - ping:
-  tags: linen_test
+
+    - debug:
+        msg:
+          - "Inventory entry for your new host:"
+          - "{{ (orig_host | regex_search('^[0-9]')
+                | ternary('newhost' + orig_host | regex_search('\\.[0-9]+$')
+                                                | regex_replace('\\.', '-'),
+                          orig_host))
+              + ' ansible_host=' + orig_host
+              + ((new_port | default(22) == 22)
+                | ternary('', ' ansible_port=' + new_port | string))
+              + ((new_user | default('') == '')
+                | ternary('', ' ansible_user=' + new_user))
+              + ((new_keyfile | default('') in ['', '-'])
+                | ternary('', ' ansible_private_key_file=' + new_keyfile))
+              + ((new_python | default('') in ['', linen_default_python])
+                | ternary('', ' ansible_python_interpreter=' + new_keyfile))
+             }}"
+  tags: linen_info
 ...
