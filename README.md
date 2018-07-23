@@ -58,6 +58,11 @@ this can make command line shorter
 these users can be renamed
 
 
+### When debugging, you can set these manually:
+    found_user:"-"
+    found_port:"-"
+    found_python:"-"
+
 ## Tags
 
 None
@@ -77,14 +82,14 @@ None
 
 ## Testing
 
-    ansible-playbook plays-all/test-role.yml -e role=ivansible.lin-enter -l newhost
+    scripts/lin-enter.sh newhost
 
 
 ## Implementation Details
 
 ### Port and user probing
 
-explain why we:
+we:
 - use wait_for_connection
     because all other methods are subject to UNREACHABLE errors
 - override with ansible_ssh_user instead of ansible_user
@@ -94,7 +99,7 @@ explain why we:
 - trick with 'failed_when' could speed up python search
 - dont use trick with `failed_when` and /no_such_python
     because wait_for_connection hides ping output
-- dont use async:1 poll:0 (add link to stackoverflow)
+- dont use async:1 poll:0
   link to stackoverflow:
     https://stackoverflow.com/q/23877781
     https://stackoverflow.com/questions/23877781/how-to-wait-for-server-restart-using-ansible
@@ -134,7 +139,15 @@ why not: apt update/upgrade, install ntp, change timezone
 rename if ...
 create if
 
+rename:
+`raw` is better becase `command`/`shell` modules depend on home directory
+`async`+`poll` prevents the unreachable error, but incompatible with `raw`
+after testing many combinations, `command` is the only viable alternative
+
 ### Python management
+
+Current logic is simple: install python2 if not present.
+In future, more methods will be implemented.
 
 what if ansible_python_interpreter != /usr/bin/python
 ... options: ignore, install python2, switch inventory to python3
