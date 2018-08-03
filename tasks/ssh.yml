@@ -1,7 +1,7 @@
 ---
 - name: configure new ssh port
   lineinfile:
-    dest: /etc/ssh/sshd_config
+    path: /etc/ssh/sshd_config
     regexp: "^Port"
     line: "Port {{new_port}}"
   register: ssh_config

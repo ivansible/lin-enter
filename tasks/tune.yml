@@ -41,7 +41,7 @@
 
 - name: remove requiretty from sudoers
   lineinfile:
-    dest: /etc/sudoers
+    path: /etc/sudoers
     regexp: '^(Defaults\s+requiretty.*)'
     state: absent
     backup: yes
