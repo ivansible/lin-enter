@@ -1,4 +1,6 @@
 ---
+# defaults file for ivansible.lin_enter
+
 # settings to probe for (and probably setup)
 linen_user: ""
 linen_pass: ""

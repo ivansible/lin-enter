@@ -1,4 +1,4 @@
-# Role ivansible.lin-enter
+# ivansible.lin_enter
 
 Fix SSH port, username, python interpreter of remote host.
 
@@ -77,7 +77,7 @@ None
 
     - hosts: vag2
       roles:
-        - { role: ivansible.lin-enter }
+        - { role: ivansible.lin_enter }
 
 
 ## Testing

@@ -2,6 +2,7 @@
 dependencies: []
 
 galaxy_info:
+  role_name: lin_enter
   author: "Ivan Andreev"
   description: "Fix SSH port, username, python interpreter"
   company: "IvanSible"
