@@ -44,6 +44,9 @@
   set_fact:
     ansible_ssh_port: "{{ new_port }}"
 
+- name: reset ansible connection
+  meta: reset_connection
+
 - name: reconnect after switching ports
   block:
     - name: wait for reconnection
