@@ -14,17 +14,28 @@
         get_checksum: no
       register: python2_binary
 
-    - name: install python2
+    - name: check that python3 is present
+      stat:
+        path: /usr/bin/python3
+        get_checksum: no
+      register: python3_binary
+
+    - name: install pythons
       block:
-        - name: apt without update (fast)
+        - name: apt install pythons without update (fast)
           apt:
-            name: python
+            name:
+              - python
+              - python3
       rescue:
-        - name: apt with update (slower)
+        - name: apt install pythons with update (slower)
           apt:
-            name: python
+            name:
+              - python
+              - python3
             update: yes
-      when: "python2_binary.stat.exists == false"
+      when: "python2_binary.stat.exists == false
+             or python3_binary.stat.exists == false"
 
     - name: switch connection to new python
       set_fact:
