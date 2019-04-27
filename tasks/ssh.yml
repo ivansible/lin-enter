@@ -1,10 +1,23 @@
 ---
-- name: configure new ssh port
-  lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: "^Port"
-    line: "Port {{new_port}}"
-  register: ssh_config
+- name: check that ufw is present
+  stat:
+    path: /usr/sbin/ufw
+    get_checksum: no
+  register: ufw_binary
+  tags: linen_firewall
+
+- name: install ufw
+  block:
+    - name: apt install ufw without update (fast)
+      apt:
+        name: ufw
+  rescue:
+    - name: apt install ufw with update (slower)
+      apt:
+        name: ufw
+        update: yes
+  when: "ufw_binary.stat.exists == false"
+  tags: linen_firewall
 
 - name: allow new port through ubuntu firewall in advance
   ufw:
@@ -13,6 +26,13 @@
     proto: tcp
   when: "linen_secure | bool == true"
   tags: linen_firewall
+
+- name: configure new ssh port
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^Port"
+    line: "Port {{ new_port }}"
+  register: ssh_config
 
 - name: restart ssh
   systemd:
