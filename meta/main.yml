@@ -4,10 +4,10 @@ dependencies: []
 galaxy_info:
   role_name: lin_enter
   author: "Ivan Andreev"
-  description: "Fix SSH port, username, python interpreter"
+  description: "detect SSH port, username and python interpreter"
   company: "IvanSible"
   license: MIT
-  min_ansible_version: 2.5
+  min_ansible_version: 2.8
 
   platforms:
     - name: Ubuntu

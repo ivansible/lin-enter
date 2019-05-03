@@ -16,7 +16,7 @@
       apt:
         name: ufw
         update: yes
-  when: "ufw_binary.stat.exists == false"
+  when: not ufw_binary.stat.exists
   tags: linen_firewall
 
 - name: allow new port through ubuntu firewall in advance
@@ -24,7 +24,7 @@
     rule: allow
     port: "{{ new_port }}"
     proto: tcp
-  when: "linen_secure | bool == true"
+  when: linen_secure |bool
   tags: linen_firewall
 
 - name: configure new ssh port
@@ -60,7 +60,7 @@
 - name: enable ubuntu firewall
   ufw:
     state: enabled
-  when: "linen_secure | bool == true"
+  when: linen_secure |bool
   tags: linen_firewall
 
 - name: test connection with new port
@@ -70,6 +70,7 @@
 - debug:
     msg:
       - "Warning: old SSH port {{ found_port }} is left open!"
-  when: "linen_secure | bool == true and ssh_config is changed"
+  when: "linen_secure |bool
+         and ssh_config is changed"
   tags: linen_firewall
 ...

@@ -29,7 +29,8 @@
       - "- python: {{ new_python or '-' }}"
       - "- uid (optional): {{ desired_uid }}"
   tags: linen_settings
-- pause:
+- name: please see new settings...
+  pause:
     seconds: "{{ linen_pause_timeout }}"
   tags: linen_settings
 
@@ -37,6 +38,7 @@
   assert:
     that: "new_user not in ['','-','root']"
     msg: "user name is invalid: {{ new_user }}"
+    quiet: yes
 
 
 - name: remove requiretty from sudoers

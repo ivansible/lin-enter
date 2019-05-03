@@ -56,27 +56,33 @@
           - "- pass: {{ found_pass | default('-',true) }}"
           - "- keyfile: {{ found_keyfile | default('-',true) }}"
           - "- python: {{ found_python | default('-',true) }}"
-    - pause:
+    - name: please see detected settings...
+      pause:
         seconds: "{{ linen_pause_timeout }}"
 
-    - set_fact:
+    - name: initialize ansible ssh user
+      set_fact:
         ansible_ssh_user: "{{ found_user }}"
       when: "found_user not in ['','-',orig_user]"
-    - set_fact:
+    - name: initialize ansible ssh port
+      set_fact:
         ansible_ssh_port: "{{ found_port }}"
       when: "found_port not in ['','-',orig_port]"
-    - set_fact:
+    - name: initialize ansible ssh pass
+      set_fact:
         ansible_ssh_pass: "{{ found_pass }}"
       when: "found_pass not in ['','-',orig_pass]"
-    - set_fact:
+    - name: initialize ansible ssh private key
+      set_fact:
         ansible_ssh_private_key_file: "{{ found_keyfile }}"
       when: "found_keyfile not in ['','-',orig_keyfile]"
-    - set_fact:
+    - name: initialize ansible python interpreter
+      set_fact:
         ansible_python_interpreter: "{{ found_python }}"
       when: "found_python not in ['','-',orig_python]"
 
-    # verify new connection
-    - ping:
+    - name: ping to verify new connection
+      ping:
   tags: linen_detect
 
 
@@ -106,7 +112,8 @@
     - name: gather facts as new user
       setup:
 
-    - ping:
+    - name: the last ping
+      ping:
 
     - debug:
         msg:

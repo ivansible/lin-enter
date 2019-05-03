@@ -34,8 +34,7 @@
               - python
               - python3
             update: yes
-      when: "python2_binary.stat.exists == false
-             or python3_binary.stat.exists == false"
+      when: "not (python2_binary.stat.exists and python3_binary.stat.exists)"
 
     - name: switch connection to new python
       set_fact:

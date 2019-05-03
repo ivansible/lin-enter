@@ -33,7 +33,8 @@
 # =========================
 # Probe multiple SSH ports
 
-- set_fact:
+- name: initialize fact "try_port" with flag "failed"
+  set_fact:
     try_port: { failed: true }
 
 - name: try next ssh port
@@ -51,14 +52,17 @@
          and found_port == '-'"
   loop: "{{ linen_try_ports }}"
 
-- set_fact:
+- name: update fact "found_port" from tried port result
+  set_fact:
     found_port: "{{ try_port.results | json_query(\"[?state=='present'].port\")
                   | default(['-'],true) | first }}"
   when: "found_port == '-'"
 
-- assert:
+- name: assert that ssh port is accessible
+  assert:
     that: "found_port != '-'"
     msg: "[{{ inventory_hostname }}] Cannot ping SSH on any port! Aborting."
+    quiet: yes
 
 - debug:
     msg: "Found SSH on port {{ found_port }} !.."
@@ -90,7 +94,9 @@
   # *not* skip remaining loops after a successful finding. Life is pain.
   #when: "found_user == '-' or found_python == '-'"
 
-- assert:
+- name: assert that user and python are detected
+  assert:
     that: "found_user != '-' and found_python != '-'"
     msg: "[{{ inventory_hostname }}] Cannot detect user / python! Aborting."
+    quiet: yes
 ...

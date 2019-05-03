@@ -11,31 +11,36 @@
         uid: "{{ desired_uid or omit }}"
       register: user_data
   rescue:
-    # fail instantly if error is not about non-unique id
-    - assert:
+    - name: fail instantly if error is not about non-unique id
+      assert:
         that: "desired_uid != 0"
         msg:
           - "Error creating new user:"
           - "{{ user_data.msg | default(user_data) }}"
+        quiet: yes
 
     - name: find competing user entry
       getent:
         database: passwd
         key: "{{ desired_uid }}"
-    - set_fact:
+    - name: extract old user name from passwd entry
+      set_fact:
         old_user: "{{ ansible_facts.getent_passwd | list | first }}"
-    - set_fact:
+    - name: extract old and new user id and home directory from passwd entry
+      set_fact:
         old_uid: "{{ ansible_facts.getent_passwd[old_user][1] }}"
         old_home: "{{ ansible_facts.getent_passwd[old_user][4] }}"
         new_home: "/home/{{ new_user }}"
         can_move: "{{ old_user in linen_scratch_users }}"
 
-    - assert:
+    - name: old user id must be equal to desired user id
+      assert:
         that: "old_uid == desired_uid"
         msg:
           - "Assertion error when creating user:"
           - "{{ old_uid }} != {{ desired_uid }}"
           - "{{ user_data.msg | default(user_data) }}"
+        quiet: yes
 
     - debug:
         msg:
@@ -45,7 +50,7 @@
           - "- new user: {{ new_user }}"
           - "- old home: {{ old_home }}"
           - "- new home: {{ new_home }}"
-      when: can_move == true
+      when: can_move
     - debug:
         msg:
           - "Warning: creating a new user"
@@ -53,13 +58,14 @@
           - "- new user: {{ new_user }}"
           - "- uid: {{ desired_uid }}"
           - "- renaming: {{ can_move }}"
-      when: can_move == false
-    - pause:
+      when: not can_move
+    - name: wait a little before renaming user
+      pause:
         seconds: "{{ linen_pause_timeout }}"
 
     - name: rename user
       include_tasks: rename.yml
-      when: can_move == true
+      when: can_move
       tags: linen_rename_user
 
     - name: find renamed or create new user with free id
@@ -95,13 +101,14 @@
     ansible_user_id: "{{ new_user }}"
 
 
-- set_fact:
+- name: check that actual user id is desired
+  set_fact:
     uid_ok: "{{ desired_uid
               | ternary(user_data.uid | int == desired_uid | int, true) }}"
 - debug:
     msg: "Success: user {{ new_user }} has uid {{ desired_uid }}"
-  when: uid_ok == true
+  when: uid_ok
 - debug:
     msg: "Notice: user {{ new_user }} has uid {{ user_data.uid }} (wanted {{ desired_uid }})"
-  when: uid_ok == false
+  when: not uid_ok
 ...
