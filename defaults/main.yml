@@ -38,7 +38,7 @@ linen_vagrant_password: vagrant
 
 # vagrant uses this key by default;
 # you should copy it from this role to your iventory.
-linen_vagrant_keyfile: files/secret/vagrant-insecure.key
+linen_vagrant_keyfile: files/secret/keys/vagrant-insecure.key
 
 # this path is hardcoded in ansible
 linen_default_python: /usr/bin/python
