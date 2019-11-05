@@ -7,10 +7,10 @@
         replace: "{{ item.0.dst }}"
         path: "{{ item.1 }}"
       with_nested:
-        - - { src: "^{{ old_user }}:",
-              dst: "{{ new_user }}:" }
-          - { src: ":{{ old_home }}:",
-              dst: ":{{ new_home }}:" }
+        - - {src: "^{{ old_user }}:",
+             dst: "{{ new_user }}:"}
+          - {src: ":{{ old_home }}:",
+             dst: ":{{ new_home }}:"}
         - - /etc/passwd
           - /etc/passwd-
           - /etc/subuid
@@ -24,12 +24,12 @@
         replace: "{{ item.0.dst }}"
         path: "{{ item.1 }}"
       with_nested:
-        - - { src: "^{{ old_user }}:",
-              dst: "{{ new_user }}:" }
-          - { src: ":{{ old_user }}$",
-              dst: ":{{ new_user }}" }
-          - { src: ",{{ old_user }}$",
-              dst: ",{{ new_user }}" }
+        - - {src: "^{{ old_user }}:",
+             dst: "{{ new_user }}:"}
+          - {src: ":{{ old_user }}$",
+             dst: ":{{ new_user }}"}
+          - {src: ",{{ old_user }}$",
+             dst: ",{{ new_user }}"}
         - - /etc/group
           - /etc/group-
           - /etc/shadow
@@ -61,6 +61,7 @@
 - name: rename user in system files (quick way)
   block:
     - name: fix user name and home in passwd files
+      # noqa 303 (no effect!)
       command: >
         sed -i
             -e 's!^{{ old_user }}:!{{ new_user }}:!'
@@ -72,6 +73,7 @@
       changed_when: linen_expose_changes |bool
 
     - name: fix user name in group files
+      # noqa 303 (no effect!)
       command: >
         sed -i
             -e 's!^{{ old_user }}:!{{ new_user }}:!'
@@ -86,6 +88,7 @@
       changed_when: linen_expose_changes |bool
 
     - name: fix user name in sudoers files
+      # noqa 303 (no effect!)
       shell:
         sed -i
             -e 's!^{{ old_user }}!{{ new_user }}!'

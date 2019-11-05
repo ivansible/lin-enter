@@ -35,7 +35,7 @@
 
 - name: initialize fact "try_port" with flag "failed"
   set_fact:
-    try_port: { failed: true }
+    try_port: {failed: true}
 
 - name: try next ssh port
   wait_for:
@@ -48,15 +48,15 @@
   connection: local
   ignore_errors: yes
   register: try_port
-  when: "item not in ['','0',0] and try_port is not successful
-         and found_port == '-'"
+  when: item not in ['','0',0] and try_port is not successful
+        and found_port == '-'
   loop: "{{ linen_try_ports }}"
 
 - name: update fact "found_port" from tried port result
   set_fact:
     found_port: "{{ try_port.results | json_query(\"[?state=='present'].port\")
                   | default(['-'],true) | first }}"
-  when: "found_port == '-'"
+  when: found_port == '-'
 
 - name: assert that ssh port is accessible
   assert:
@@ -75,7 +75,7 @@
   file:
     path: "{{ item }}"
     mode: 0600
-  when: "item != ''"
+  when: item != '' # noqa 602
   loop:
     - "{{ orig_keyfile }}"
     - "{{ linen_keyfile_ }}"
@@ -92,7 +92,7 @@
   # performs these checks only at loop initialization. Hence, conditions
   # are not reasserted *on* the next iteration, so the check below does
   # *not* skip remaining loops after a successful finding. Life is pain.
-  #when: "found_user == '-' or found_python == '-'"
+  #when: found_user == '-' or found_python == '-'
 
 - name: assert that user and python are detected
   assert:

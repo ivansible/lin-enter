@@ -46,7 +46,7 @@
     - name: detect the best connection method
       import_tasks: detect.yml
       # when debugging, you can set these manually
-      when: "found_user == '-' or found_port == '-' or found_python == '-'"
+      when: found_user == '-' or found_port == '-' or found_python == '-'
 
     - debug:
         msg:
@@ -63,23 +63,23 @@
     - name: initialize ansible ssh user
       set_fact:
         ansible_ssh_user: "{{ found_user }}"
-      when: "found_user not in ['','-',orig_user]"
+      when: found_user not in ['','-',orig_user]
     - name: initialize ansible ssh port
       set_fact:
         ansible_ssh_port: "{{ found_port }}"
-      when: "found_port not in ['','-',orig_port]"
+      when: found_port not in ['','-',orig_port]
     - name: initialize ansible ssh pass
       set_fact:
         ansible_ssh_pass: "{{ found_pass }}"
-      when: "found_pass not in ['','-',orig_pass]"
+      when: found_pass not in ['','-',orig_pass]
     - name: initialize ansible ssh private key
       set_fact:
         ansible_ssh_private_key_file: "{{ found_keyfile }}"
-      when: "found_keyfile not in ['','-',orig_keyfile]"
+      when: found_keyfile not in ['','-',orig_keyfile]
     - name: initialize ansible python interpreter
       set_fact:
         ansible_python_interpreter: "{{ found_python }}"
-      when: "found_python not in ['','-',orig_python]"
+      when: found_python not in ['','-',orig_python]
 
     - name: ping to verify new connection
       ping:

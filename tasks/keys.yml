@@ -3,7 +3,7 @@
   file:
     path: "{{ item }}"
     mode: 0600
-  when: "item != ''"
+  when: item != '' # noqa 602
   loop:
     - "{{ new_keyfile }}"
     - "{{ linen_vagrant_keyfile }}"
@@ -16,7 +16,7 @@
     key: "{{ lookup('pipe', 'ssh-keygen -y -f \"{{ item }}\"') }}"
     comment: "{{ new_keyfile | basename }}"
     state: present
-  when: "item != ''"
+  when: item != '' # noqa 602
   loop:
     - "{{ new_keyfile }}"
 
@@ -25,7 +25,7 @@
     - name: switch to new key before removing insecure keys
       set_fact:
         ansible_ssh_private_key_file: "{{ new_keyfile }}"
-      when: "found_keyfile in [linen_vagrant_keyfile]"
+      when: found_keyfile in [linen_vagrant_keyfile]
 
     - name: remove insecure keys
       authorized_key:
@@ -33,7 +33,7 @@
         user: "{{ ansible_user_id }}"
         key: "{{ lookup('pipe', 'ssh-keygen -y -f \"{{ item }}\"') }}"
         state: absent
-      when: "item != ''"
+      when: item != '' # noqa 602
       loop:
         - "{{ linen_vagrant_keyfile }}"
       register: remove_keys
@@ -48,7 +48,7 @@
           retries: "{{ linen_conn_retries }}"
       when: remove_keys is changed
   # do not remove keys if they were just added or if nothing was added
-  when: "linen_secure | bool == true
-         and linen_vagrant_keyfile != new_keyfile
-         and new_keyfile != ''"
+  when: linen_secure |bool
+        and linen_vagrant_keyfile != new_keyfile
+        and new_keyfile != ''                    # noqa 602
 ...

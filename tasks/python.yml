@@ -4,7 +4,7 @@
 - name: default is python2
   set_fact:
     found_python: ""
-  when: "found_python == linen_default_python"
+  when: found_python == linen_default_python
 
 - name: change interpreter to python2
   block:
@@ -34,13 +34,13 @@
               - python
               - python3
             update: yes
-      when: "not (python2_binary.stat.exists and python3_binary.stat.exists)"
+      when: not (python2_binary.stat.exists and python3_binary.stat.exists)
 
     - name: switch connection to new python
       set_fact:
         new_python: ""
         ansible_python_interpreter: "{{ linen_default_python }}"
   # when: 1. have to update; 2. force python2 anyway :)
-  when: "found_python != new_python
-         or new_python != ''"
+  when: found_python != new_python
+        or new_python != ''        # noqa 602
 ...

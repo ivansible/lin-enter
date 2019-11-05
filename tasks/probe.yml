@@ -7,7 +7,7 @@
 
 - name: init iterator
   set_fact:
-    try_user: { failed: true }
+    try_user: {failed: true}
 
 - name: (1) try default user with different pythons
   wait_for_connection:
@@ -19,10 +19,10 @@
   register: try_user
   # Empty item means "item not found -> skip" in blocks of this unit,
   # but in this block the empty try_python item means "try all pythons".
-  when: "found_user == '-'
-         and try_user is not successful
-         and try_python == ''
-         and '1' in linen_login_methods"
+  when: found_user == '-'
+        and try_user is not successful
+        and '1' in linen_login_methods
+        and try_python == ''           # noqa 602
   loop: "{{ linen_try_real_pythons }}"
 
 - name: extract ok items
@@ -35,7 +35,7 @@
     found_pass: "{{ orig_pass }}"
     found_keyfile: "{{ orig_keyfile }}"
     found_python: "{{ ok_items | first | default(orig_python,true) }}"
-  when: "found_user == '-' and ok_items"
+  when: found_user == '-' and ok_items
 
 
 # ========= (2) try default user with custom keyfile
@@ -49,9 +49,9 @@
     ansible_python_interpreter: "{{ try_python or orig_python }}"
   ignore_errors: yes
   register: try_user
-  when: "found_user == '-'
-         and linen_keyfile_ != ''
-         and '2' in linen_login_methods"
+  when: found_user == '-'
+        and linen_keyfile_ != ''
+        and '2' in linen_login_methods
   loop:
     - ""
 
@@ -65,14 +65,14 @@
     found_pass: "{{ orig_pass }}"
     found_keyfile: "{{ linen_keyfile_ }}"
     found_python: "{{ try_python | default(orig_python,true) }}"
-  when: "found_user == '-' and ok_items"
+  when: found_user == '-' and ok_items
 
 
 # ========= (3) try default user with password and different pythons
 
 - name: init iterator
   set_fact:
-    try_user: { failed: true }
+    try_user: {failed: true}
 
 - name: (3) try default user with password and different pythons
   wait_for_connection:
@@ -85,11 +85,11 @@
   register: try_user
   # Empty item means "item not found -> skip" in blocks of this unit,
   # but in this block the empty try_python item means "try all pythons".
-  when: "found_user == '-'
-         and try_user is not successful
-         and try_python == ''
-         and linen_pass != ''
-         and '3' in linen_login_methods"
+  when: found_user == '-'
+        and try_user is not successful
+        and try_python == ''
+        and '3' in linen_login_methods
+        and linen_pass != ''           # noqa 602
   loop: "{{ linen_try_real_pythons }}"
 
 - name: extract ok items
@@ -102,14 +102,14 @@
     found_pass: "{{ linen_pass }}"
     found_keyfile: ""
     found_python: "{{ ok_items | first | default(orig_python,true) }}"
-  when: "found_user == '-' and ok_items"
+  when: found_user == '-' and ok_items
 
 
 # ========= (4) try root with password and different pythons
 
 - name: init iterator
   set_fact:
-    try_user: { failed: true }
+    try_user: {failed: true}
 
 - name: (4) try root with password and different pythons
   wait_for_connection:
@@ -123,11 +123,11 @@
   register: try_user
   # Empty item means "item not found -> skip" in blocks of this unit,
   # but in this block the empty try_python item means "try all pythons".
-  when: "found_user == '-'
-         and try_user is not successful
-         and try_python == ''
-         and linen_pass != ''
-         and '4' in linen_login_methods"
+  when: found_user == '-'
+        and try_user is not successful
+        and '4' in linen_login_methods
+        and try_python == ''
+        and linen_pass != ''           # noqa 602
   loop: "{{ linen_try_real_pythons }}"
 
 - name: extract ok items
@@ -140,14 +140,14 @@
     found_pass: "{{ linen_pass }}"
     found_keyfile: ""
     found_python: "{{ ok_items | first | default(orig_python,true) }}"
-  when: "found_user == '-' and ok_items"
+  when: found_user == '-' and ok_items
 
 
 # ========= (5) try other user names with default settings
 
 - name: init iterator
   set_fact:
-    try_user: { failed: true }
+    try_user: {failed: true}
 
 - name: (5) try other user names with default settings
   wait_for_connection:
@@ -158,10 +158,10 @@
     ansible_python_interpreter: "{{ try_python or orig_python }}"
   ignore_errors: yes
   register: try_user
-  when: "found_user == '-'
-         and try_user is not successful
-         and item != ''
-         and '5' in linen_login_methods"
+  when: found_user == '-'
+        and try_user is not successful
+        and '5' in linen_login_methods
+        and item != ''                 # noqa 602
   loop: "{{ linen_try_users }}"
 
 - name: extract ok items
@@ -174,14 +174,14 @@
     found_pass: "{{ orig_pass }}"
     found_keyfile: "{{ orig_keyfile }}"
     found_python: "{{ try_python | default(orig_python,true) }}"
-  when: "found_user == '-' and ok_items"
+  when: found_user == '-' and ok_items
 
 
 # ========= (6) try other user names with custom keyfile
 
 - name: init iterator
   set_fact:
-    try_user: { failed: true }
+    try_user: {failed: true}
 
 - name: (6) try other user names with custom keyfile
   wait_for_connection:
@@ -193,11 +193,11 @@
     ansible_python_interpreter: "{{ try_python or orig_python }}"
   ignore_errors: yes
   register: try_user
-  when: "found_user == '-'
-         and try_user is not successful
-         and item != ''
-         and linen_keyfile_ != ''
-         and '6' in linen_login_methods"
+  when: found_user == '-'
+        and try_user is not successful
+        and '6' in linen_login_methods
+        and linen_keyfile_ != ''
+        and item != ''                 # noqa 602
   loop: "{{ linen_try_users }}"
 
 - name: extract ok items
@@ -210,14 +210,14 @@
     found_pass: "{{ orig_pass }}"
     found_keyfile: "{{ linen_keyfile_ }}"
     found_python: "{{ try_python | default(orig_python,true) }}"
-  when: "found_user == '-' and ok_items"
+  when: found_user == '-' and ok_items
 
 
 # ========= (7) try other user names with password
 
 - name: init iterator
   set_fact:
-    try_user: { failed: true }
+    try_user: {failed: true}
 
 - name: (7) try other user names with custom keyfile
   wait_for_connection:
@@ -229,11 +229,11 @@
     ansible_python_interpreter: "{{ try_python or orig_python }}"
   ignore_errors: yes
   register: try_user
-  when: "found_user == '-'
-         and try_user is not successful
-         and item != ''
-         and linen_pass != ''
-         and '7' in linen_login_methods"
+  when: found_user == '-'
+        and try_user is not successful
+        and '7' in linen_login_methods
+        and linen_pass != ''
+        and item != ''                 # noqa 602
   loop: "{{ linen_try_users }}"
 
 - name: extract ok items
@@ -246,14 +246,14 @@
     found_pass: "{{ orig_pass }}"
     found_keyfile: ""
     found_python: "{{ try_python | default(orig_python,true) }}"
-  when: "found_user == '-' and ok_items"
+  when: found_user == '-' and ok_items
 
 
 # ========= (8) try vagrant with insecure key
 
 - name: init iterator
   set_fact:
-    try_user: { failed: true }
+    try_user: {failed: true}
 
 - name: (8) try vagrant with insecure key
   wait_for_connection:
@@ -265,10 +265,10 @@
     ansible_python_interpreter: "{{ try_python or orig_python }}"
   ignore_errors: yes
   register: try_user
-  when: "found_user == '-'
-         and try_user is not successful
-         and item != ''
-         and '8' in linen_login_methods"
+  when: found_user == '-'
+        and try_user is not successful
+        and '8' in linen_login_methods
+        and item != ''                 # noqa 602
   loop:
     - vagrant
     - root
@@ -283,14 +283,14 @@
     found_pass: ""
     found_keyfile: "{{ linen_vagrant_keyfile }}"
     found_python: "{{ try_python | default(orig_python,true) }}"
-  when: "found_user == '-' and ok_items"
+  when: found_user == '-' and ok_items
 
 
 # ========= (9) try vagrant with password
 
 - name: init iterator
   set_fact:
-    try_user: { failed: true }
+    try_user: {failed: true}
 
 - name: (9) try vagrant with password
   wait_for_connection:
@@ -302,10 +302,10 @@
     ansible_python_interpreter: "{{ try_python or orig_python }}"
   ignore_errors: yes
   register: try_user
-  when: "found_user == '-'
-         and try_user is not successful
-         and item != ''
-         and '9' in linen_login_methods"
+  when: found_user == '-'
+        and try_user is not successful
+        and '9' in linen_login_methods
+        and item != ''                 # noqa 602
   loop:
     - vagrant
     - root
@@ -320,7 +320,7 @@
     found_pass: "{{ linen_vagrant_password }}"
     found_keyfile: ""
     found_python: "{{ try_python | default(orig_python,true) }}"
-  when: "found_user == '-' and ok_items"
+  when: found_user == '-' and ok_items
 
 
 # ========= done

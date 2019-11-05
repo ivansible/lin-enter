@@ -70,7 +70,7 @@
 - debug:
     msg:
       - "Warning: old SSH port {{ found_port }} is left open!"
-  when: "linen_secure |bool
-         and ssh_config is changed"
+  when: linen_secure |bool
+        and ssh_config is changed
   tags: linen_firewall
 ...
