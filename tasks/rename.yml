@@ -51,7 +51,7 @@
         replace: "{{ new_user }}"
         path: "{{ item }}"
       with_flattened:
-        - /etc/sudoers
+        - '/etc/sudoers'
         - "{{ sudoers_files | json_query('files[].path') }}"
       loop_control:
         label: "{{ item }} ^{{ old_user }}"

@@ -85,9 +85,9 @@
   ignore_errors: yes
 
 - include_tasks: probe.yml
-  loop: "{{ linen_try_real_pythons }}"
   loop_control:
     loop_var: try_python
+  loop: "{{ linen_try_real_pythons }}"
   # Ansible does check a 'when' condition *for* every iteration, but
   # performs these checks only at loop initialization. Hence, conditions
   # are not reasserted *on* the next iteration, so the check below does
