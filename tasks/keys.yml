@@ -1,20 +1,10 @@
 ---
-- name: fix permissions on local key files (for ssh-keygen)
-  file:
-    path: "{{ item }}"
-    mode: 0600
-  when: item != ''  # noqa 602
-  loop:
-    - "{{ new_keyfile }}"
-    - "{{ linen_vagrant_keyfile }}"
-  connection: local
-
-- name: authorize my public keys
+- name: authorize my public keys (also fix permissions)
   authorized_key:
     # ansible_user_id should have been updated to new user
     user: "{{ ansible_user_id }}"
     key: "{{ lookup('pipe', keygen_cmd) }}"
-    comment: "{{ new_keyfile | basename }}"
+    comment: "{{ new_keyfile |basename |regex_replace('[.]key$') }}"
     state: present
   vars:
     # deliberately use ';' in the pipe to ignore chmod errors

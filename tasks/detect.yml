@@ -15,7 +15,7 @@
 # SSH fails to connect if private key has mode other than 0600.
 # If this step fails with "file not found", please manually copy the
 # `file/secret/*.key` files from this role to playbook or inventory.
-- name: fix permissions of local vagrant key file
+- name: fix permissions of the local vagrant key file
   file:
     path: "{{ linen_vagrant_keyfile }}"
     mode: 0600

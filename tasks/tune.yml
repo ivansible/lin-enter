@@ -20,7 +20,8 @@
     new_python: ""
   tags: linen_settings
 
-- debug:
+- name: print new settings
+  debug:
     msg:
       - "New settings:"
       - "- port: {{ new_port }}"

@@ -36,11 +36,11 @@
 
 - name: investigate connection problems
   block:
-    - name: check for problems with ssh port and username
+    - name: check for problems with ssh port and username, warning (even error) is ok
       wait_for_connection:
         timeout: "{{ linen_wait_timeout }}"
 
-    - name: check for problems with python interpreter
+    - name: check for problems with python interpreter (will be rescued if it fails)
       ping:
   rescue:
     - name: detect the best connection method
@@ -48,7 +48,8 @@
       # when debugging, you can set these manually
       when: found_user == '-' or found_port == '-' or found_python == '-'
 
-    - debug:
+    - name: print detected settings
+      debug:
         msg:
           - "Detected settings:"
           - "- port: {{ found_port | default('-',true) }}"
@@ -115,12 +116,13 @@
     - name: the last ping
       ping:
 
-    - debug:
+    - name: print new inventory host
+      debug:
         msg:
           - "Inventory entry for your new host:"
           - "{{ (orig_host | regex_search('^[0-9]')
                 | ternary('newhost' + orig_host | regex_search('\\.[0-9]+$')
-                                                | regex_replace('\\.', '-'),
+                                                | regex_replace('\\.', '_'),
                           orig_host))
               + ' ansible_host=' + orig_host
               + ((new_port |default(22) == 22)

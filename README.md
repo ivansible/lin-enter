@@ -82,11 +82,6 @@ None
         - ivansible.lin_enter
 
 
-## Testing
-
-    ./bin/lin-enter.sh newhost
-
-
 ## Implementation Details
 
 ### Port and user probing
@@ -148,8 +143,7 @@ after testing many combinations, `command` is the only viable alternative
 
 ### Python management
 
-Current logic is simple: install python2 if not present.
-In future, more methods will be implemented.
+The logic is simple: install python2 and python3, if not present.
 
 what if ansible_python_interpreter != /usr/bin/python
 ... options: ignore, install python2, switch inventory to python3
@@ -163,6 +157,43 @@ what if ansible_python_interpreter != /usr/bin/python
 - if linen_python=python3, search it first
 - if linen_port=xxx, search it first
 - if linen_vagrant=true, skip other methods
+
+
+## Usage
+
+Enter a Vultr box by root password, probing for custom SSH port and
+then switching to this port, create a new user (trying to make uid=1000),
+and finally install python2 and authorize my default private key:
+
+    export ANSIBLE_STRATEGY=linear
+    ivantory-role .lin-enter all -i ,10.1.2.3 -e linen_pass='secret' -e linen_user=myuser -e linen_port=8822 -e linen_keyfile=default -e linen_ufw=false -e gather=false
+
+Enter a new Vultr box initialized with SSH key:
+
+    ./bin/lin-enter all -i ,10.1.2.3 -e linen_keyfile=files/secret/keys/newbox.key -e linen_ufw=false
+
+Enter a box already added to repository:
+
+    ANSIBLE_STRATEGY=linear ivantory-role .lin-enter vag2 -e linen_new_keyfile=default -e gather=false -e linen_ufw=false
+
+**Notes**:
+  - The `ivantory-role` script will by default commence role execution with
+    initial _fact gathering_, which is going to fail because SSH port is not
+    known in advance, and hence should be disabled like so:
+    `-e gather=false`;
+  - The probing algorithm depends on python intepreter interpolation,
+    which is incompatible with _mitogen_, so you have to disable _mitogen_:
+    `ANSIBLE_STRATEGY=linear`;
+  - The `bin/lin-enter` script intrinsically applies the hacks above.
+  - The role by default enables `ufw` firewall on the host.
+    If you use `ferm` instead of `ufw`, please skip this step like so:
+    `-e linen_ufw=false`.
+  - Probing will most probably cause many warnings (the initial interpreter
+    check will be even recorded in the playbook summary as failed, but in fact
+    it is rescued). You can safely ignore them.
+
+Find more usage examples
+[here](https://github.com/ivansible/ivantory-test#fix-connectivity-of-a-new-box).
 
 
 ## License

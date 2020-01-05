@@ -34,14 +34,14 @@ linen_conn_timeout: 3
 linen_port_timeout: 5
 linen_wait_timeout: 3
 linen_conn_retries: 3
-linen_pause_timeout: 3
+linen_pause_timeout: 5
 
 # default password for vagrant boxes
 linen_vagrant_password: vagrant
 
 # vagrant uses this key by default;
 # you should copy it from this role to your iventory.
-linen_vagrant_keyfile: files/secret/keys/vagrant-insecure.key
+linen_vagrant_keyfile: files/insecure.key
 
 # this path is hardcoded in ansible
 linen_default_python: /usr/bin/python
