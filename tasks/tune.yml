@@ -36,9 +36,9 @@
 
 - name: validate new user
   assert:
-    that: "new_user not in ['','-','root']"
+    that: new_user not in ['','-','root']
     msg: "user name is invalid: {{ new_user }}"
-    quiet: yes
+    quiet: true
 
 
 - name: remove requiretty from sudoers
@@ -46,7 +46,7 @@
     path: /etc/sudoers
     regexp: '^(Defaults\s+requiretty.*)'
     state: absent
-    backup: yes
+    backup: true
   tags: linen_requiretty
 
 - name: restore pipelining once requiretty is ok

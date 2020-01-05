@@ -1,13 +1,13 @@
 ---
-# defaults file for ivansible.lin_enter
+# defaults for ivansible.lin_enter
 
-# settings to probe for (and probably setup)
+# settings to probe (and probably setup)
 linen_user: ""
 linen_pass: ""
 linen_port: ""
 linen_keyfile: ""
 
-# settings to setup (only if differ from above)
+# settings to setup (only if they differ from above)
 linen_new_user: ""
 linen_new_port: ""
 linen_new_keyfile: ""
@@ -15,10 +15,13 @@ linen_new_keyfile: ""
 # this can make command line shorter
 linen_default_keyfile: ""
 
-# refer to README on this one
+# please refer to the README on this one
 linen_secure: true
 
-# attempt to adjust user to this uid
+# allows to install ufw firewall
+linen_ufw: true
+
+# will attempt to adjust user to this uid
 linen_desired_uid: 1000
 
 # these users can be renamed
@@ -62,7 +65,7 @@ linen_try_pythons:
   - "{{ linen_default_python }}"
 
 # probe method mask for debugging
-linen_login_methods: "123456789"
+linen_login_methods: '123456789'
 
 # internal settings
 linen_use_quick_way: true

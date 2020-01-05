@@ -50,9 +50,7 @@
         regexp: "^{{ old_user }}"
         replace: "{{ new_user }}"
         path: "{{ item }}"
-      with_flattened:
-        - '/etc/sudoers'
-        - "{{ sudoers_files | json_query('files[].path') }}"
+      with_flattened: "{{ [sudoers_files |json_query('files[].path'), '/etc/sudoers'] }}"
       loop_control:
         label: "{{ item }} ^{{ old_user }}"
   when: not linen_use_quick_way |bool
@@ -61,7 +59,6 @@
 - name: rename user in system files (quick way)
   block:
     - name: fix user name and home in passwd files
-      # noqa 303 (no effect!)
       command: >
         sed -i
             -e 's!^{{ old_user }}:!{{ new_user }}:!'
@@ -71,9 +68,9 @@
           /etc/subuid
           /etc/subgid
       changed_when: linen_expose_changes |bool
+      tags: skip_ansible_lint  # noqa 303 (no effect!)
 
     - name: fix user name in group files
-      # noqa 303 (no effect!)
       command: >
         sed -i
             -e 's!^{{ old_user }}:!{{ new_user }}:!'
@@ -86,15 +83,16 @@
           /etc/gshadow
           /etc/gshadow-
       changed_when: linen_expose_changes |bool
+      tags: skip_ansible_lint  # noqa 303 (no effect!)
 
     - name: fix user name in sudoers files
-      # noqa 303 (no effect!)
       shell:
         sed -i
             -e 's!^{{ old_user }}!{{ new_user }}!'
           /etc/sudoers
           /etc/sudoers.d/*
       changed_when: linen_expose_changes |bool
+      tags: skip_ansible_lint  # noqa 303 (no effect!)
   when: linen_use_quick_way |bool
 
 
@@ -106,7 +104,7 @@
   args:
     removes: "{{ old_home }}"
     creates: "{{ new_home }}"
-  ignore_errors: yes
+  ignore_errors: true
   register: move_home_result
 
 
@@ -130,7 +128,7 @@
 
 - name: assert that new home directory exists
   assert:
-    that: "new_home_state.stat.exists and new_home_state.stat.isdir"
+    that: new_home_state.stat.exists and new_home_state.stat.isdir
     msg:
       - "There was an error moving home directory"
       - "{{ move_home_result.msg | default(move_home_result) }}"
@@ -145,5 +143,5 @@
   file:
     path: "{{ new_home }}/.ansible"
     state: absent
-  ignore_errors: yes
+  ignore_errors: true
 ...

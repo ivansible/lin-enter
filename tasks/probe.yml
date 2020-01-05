@@ -15,14 +15,14 @@
   vars:
     ansible_ssh_port: "{{ found_port }}"
     ansible_python_interpreter: "{{ item or orig_python }}"
-  ignore_errors: yes
+  ignore_errors: true
   register: try_user
   # Empty item means "item not found -> skip" in blocks of this unit,
   # but in this block the empty try_python item means "try all pythons".
-  when: found_user == '-'
+  when: ('1' in linen_login_methods)
+        and found_user == '-'
         and try_user is not successful
-        and '1' in linen_login_methods
-        and try_python == ''           # noqa 602
+        and try_python == ''            # noqa 602
   loop: "{{ linen_try_real_pythons }}"
 
 - name: extract ok items
@@ -47,11 +47,11 @@
     ansible_ssh_port: "{{ found_port }}"
     ansible_ssh_private_key_file: "{{ linen_keyfile_ }}"
     ansible_python_interpreter: "{{ try_python or orig_python }}"
-  ignore_errors: yes
+  ignore_errors: true
   register: try_user
-  when: found_user == '-'
-        and linen_keyfile_ != ''
-        and '2' in linen_login_methods
+  when: ('2' in linen_login_methods)
+        and found_user == '-'
+        and linen_keyfile_ != ''   # noqa 602
   loop:
     - ""
 
@@ -81,15 +81,14 @@
     ansible_ssh_pass: "{{ linen_pass }}"
     ansible_ssh_port: "{{ found_port }}"
     ansible_python_interpreter: "{{ item or orig_python }}"
-  ignore_errors: yes
+  ignore_errors: true
   register: try_user
   # Empty item means "item not found -> skip" in blocks of this unit,
   # but in this block the empty try_python item means "try all pythons".
-  when: found_user == '-'
+  when: ('3' in linen_login_methods)
+        and found_user == '-'
         and try_user is not successful
-        and try_python == ''
-        and '3' in linen_login_methods
-        and linen_pass != ''           # noqa 602
+        and try_python == '' and linen_pass != ''  # noqa 602
   loop: "{{ linen_try_real_pythons }}"
 
 - name: extract ok items
@@ -119,15 +118,14 @@
     ansible_ssh_pass: "{{ linen_pass }}"
     ansible_ssh_port: "{{ found_port }}"
     ansible_python_interpreter: "{{ item or orig_python }}"
-  ignore_errors: yes
+  ignore_errors: true
   register: try_user
   # Empty item means "item not found -> skip" in blocks of this unit,
   # but in this block the empty try_python item means "try all pythons".
-  when: found_user == '-'
+  when: ('4' in linen_login_methods)
+        and found_user == '-'
         and try_user is not successful
-        and '4' in linen_login_methods
-        and try_python == ''
-        and linen_pass != ''           # noqa 602
+        and try_python == '' and linen_pass != ''  # noqa 602
   loop: "{{ linen_try_real_pythons }}"
 
 - name: extract ok items
@@ -156,12 +154,12 @@
     ansible_ssh_user: "{{ item }}"
     ansible_ssh_port: "{{ found_port }}"
     ansible_python_interpreter: "{{ try_python or orig_python }}"
-  ignore_errors: yes
+  ignore_errors: true
   register: try_user
-  when: found_user == '-'
+  when: ('5' in linen_login_methods)
+        and found_user == '-'
         and try_user is not successful
-        and '5' in linen_login_methods
-        and item != ''                 # noqa 602
+        and item != ''                  # noqa 602
   loop: "{{ linen_try_users }}"
 
 - name: extract ok items
@@ -191,13 +189,12 @@
     ansible_ssh_port: "{{ found_port }}"
     ansible_ssh_private_key_file: "{{ linen_keyfile_ }}"
     ansible_python_interpreter: "{{ try_python or orig_python }}"
-  ignore_errors: yes
+  ignore_errors: true
   register: try_user
-  when: found_user == '-'
+  when: ('6' in linen_login_methods)
+        and found_user == '-'
         and try_user is not successful
-        and '6' in linen_login_methods
-        and linen_keyfile_ != ''
-        and item != ''                 # noqa 602
+        and linen_keyfile_ != '' and item != ''  # noqa 602
   loop: "{{ linen_try_users }}"
 
 - name: extract ok items
@@ -227,13 +224,12 @@
     ansible_ssh_pass: "{{ linen_pass }}"
     ansible_ssh_port: "{{ found_port }}"
     ansible_python_interpreter: "{{ try_python or orig_python }}"
-  ignore_errors: yes
+  ignore_errors: true
   register: try_user
-  when: found_user == '-'
+  when: ('7' in linen_login_methods)
+        and found_user == '-'
         and try_user is not successful
-        and '7' in linen_login_methods
-        and linen_pass != ''
-        and item != ''                 # noqa 602
+        and linen_pass != '' and item != ''  # noqa 602
   loop: "{{ linen_try_users }}"
 
 - name: extract ok items
@@ -263,11 +259,11 @@
     ansible_ssh_private_key_file: "{{ linen_vagrant_keyfile }}"
     ansible_ssh_port: "{{ found_port }}"
     ansible_python_interpreter: "{{ try_python or orig_python }}"
-  ignore_errors: yes
+  ignore_errors: true
   register: try_user
-  when: found_user == '-'
+  when: ('8' in linen_login_methods)
+        and found_user == '-'
         and try_user is not successful
-        and '8' in linen_login_methods
         and item != ''                 # noqa 602
   loop:
     - vagrant
@@ -300,12 +296,12 @@
     ansible_ssh_pass: "{{ linen_vagrant_password }}"
     ansible_ssh_port: "{{ found_port }}"
     ansible_python_interpreter: "{{ try_python or orig_python }}"
-  ignore_errors: yes
+  ignore_errors: true
   register: try_user
-  when: found_user == '-'
+  when: ('9' in linen_login_methods)
+        and found_user == '-'
         and try_user is not successful
-        and '9' in linen_login_methods
-        and item != ''                 # noqa 602
+        and item != ''                  # noqa 602
   loop:
     - vagrant
     - root

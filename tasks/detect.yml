@@ -46,7 +46,7 @@
     connect_timeout: "{{ linen_conn_timeout }}"
     timeout: "{{ linen_port_timeout }}"
   connection: local
-  ignore_errors: yes
+  ignore_errors: true
   register: try_port
   when: item not in ['','0',0] and try_port is not successful
         and found_port == '-'
@@ -54,15 +54,15 @@
 
 - name: update fact "found_port" from tried port result
   set_fact:
-    found_port: "{{ try_port.results | json_query(\"[?state=='present'].port\")
-                  | default(['-'],true) | first }}"
+    found_port: "{{ try_port.results |json_query(\"[?state=='present'].port\")
+                  | default(['-'],true) |first }}"
   when: found_port == '-'
 
 - name: assert that ssh port is accessible
   assert:
-    that: "found_port != '-'"
+    that: found_port != '-'
     msg: "[{{ inventory_hostname }}] Cannot ping SSH on any port! Aborting."
-    quiet: yes
+    quiet: true
 
 - debug:
     msg: "Found SSH on port {{ found_port }} !.."
@@ -75,28 +75,28 @@
   file:
     path: "{{ item }}"
     mode: 0600
-  when: item != '' # noqa 602
+  when: item != ''  # noqa 602
   loop:
     - "{{ orig_keyfile }}"
     - "{{ linen_keyfile_ }}"
     - "{{ linen_new_keyfile_ }}"
     - "{{ linen_vagrant_keyfile }}"
   connection: local
-  ignore_errors: yes
+  ignore_errors: true
 
 - include_tasks: probe.yml
   loop_control:
     loop_var: try_python
   loop: "{{ linen_try_real_pythons }}"
-  # Ansible does check a 'when' condition *for* every iteration, but
+  # Ansible does check the 'when' condition for *every* iteration, but
   # performs these checks only at loop initialization. Hence, conditions
-  # are not reasserted *on* the next iteration, so the check below does
+  # are not reasserted on the *next* iteration, so the check below does
   # *not* skip remaining loops after a successful finding. Life is pain.
-  #when: found_user == '-' or found_python == '-'
+  # when: found_user == '-' or found_python == '-'
 
 - name: assert that user and python are detected
   assert:
-    that: "found_user != '-' and found_python != '-'"
+    that: found_user != '-' and found_python != '-'
     msg: "[{{ inventory_hostname }}] Cannot detect user / python! Aborting."
-    quiet: yes
+    quiet: true
 ...

@@ -1,6 +1,6 @@
 ---
-#===================
-# 1. scan inventory
+# ====================
+# = 1. scan inventory
 
 - name: read inventory settings
   set_fact:
@@ -20,15 +20,15 @@
 # when debugging, you can set these manually
 - name: reset found facts
   set_fact:
-    found_user: "-"
-    found_port: "-"
-    found_python: "-"
-    found_pass: ""
-    found_keyfile: ""
+    found_user: '-'
+    found_port: '-'
+    found_python: '-'
+    found_pass: ''
+    found_keyfile: ''
 
 
-#=============================
-# 2. investigate connectivity
+# ==============================
+# = 2. investigate connectivity
 
 - name: disable hostkey checking
   set_fact:
@@ -86,8 +86,8 @@
   tags: linen_detect
 
 
-#=========================
-# 3. adjust host settings
+# ==========================
+# = 3. adjust host settings
 
 - name: gather facts once connected
   setup:
@@ -98,12 +98,12 @@
 
 - name: adjust host settings
   import_tasks: tune.yml
-  become: yes
+  become: true
   tags: linen_tune
 
 
-#=========================
-# 4. print inventory info
+# ==========================
+# = 4. print inventory info
 
 - block:
     - name: clear facts
@@ -123,13 +123,13 @@
                                                 | regex_replace('\\.', '-'),
                           orig_host))
               + ' ansible_host=' + orig_host
-              + ((new_port | default(22) == 22)
+              + ((new_port |default(22) == 22)
                 | ternary('', ' ansible_port=' + new_port | string))
-              + ((new_user | default('') == '')
+              + ((new_user |default('') in [''])
                 | ternary('', ' ansible_user=' + new_user))
-              + ((new_keyfile | default('') in ['', '-'])
+              + ((new_keyfile |default('') in ['', '-'])
                 | ternary('', ' ansible_private_key_file=' + new_keyfile))
-              + ((new_python | default('') in ['', linen_default_python])
+              + ((new_python |default('') in ['', linen_default_python])
                 | ternary('', ' ansible_python_interpreter=' + new_keyfile))
              }}"
   tags: linen_info

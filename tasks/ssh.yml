@@ -2,7 +2,7 @@
 - name: check that ufw is present
   stat:
     path: /usr/sbin/ufw
-    get_checksum: no
+    get_checksum: false
   register: ufw_binary
   tags: linen_firewall
 
@@ -15,8 +15,8 @@
     - name: apt install ufw with update (slower)
       apt:
         name: ufw
-        update: yes
-  when: not ufw_binary.stat.exists
+        update: true
+  when: linen_ufw |bool and not ufw_binary.stat.exists
   tags: linen_firewall
 
 - name: allow new port through ubuntu firewall in advance
@@ -24,7 +24,7 @@
     rule: allow
     port: "{{ new_port }}"
     proto: tcp
-  when: linen_secure |bool
+  when: linen_ufw |bool and linen_secure |bool
   tags: linen_firewall
 
 - name: configure new ssh port
@@ -60,7 +60,7 @@
 - name: enable ubuntu firewall
   ufw:
     state: enabled
-  when: linen_secure |bool
+  when: linen_ufw |bool and linen_secure |bool
   tags: linen_firewall
 
 - name: test connection with new port

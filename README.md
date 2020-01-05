@@ -6,7 +6,7 @@ Fix SSH port, username, python interpreter of remote host.
 ## Requirements
 
 Playbook setting `gather_facts` should be set to false when running this role
-because it will fail if the Ansible SSH port is not set correctly.
+because it will fail if Ansible SSH port is set incorrectly.
 
 This role uses [JMES path](http://jmespath.org/), expressions
 so please `pip install jmespath`.
@@ -40,9 +40,11 @@ this can make command line shorter
 
 ### SSH ports and keys
 
-    linen_secure: true
+    linen_ufw: true
+Allows to install and enable `ufw` firewall.
 
-...
+    linen_secure: true
+Allows to configure non-standard SSH port.
 
 
 ### Create new user
@@ -75,21 +77,21 @@ None
 
 ## Example Playbook
 
-    - hosts: vag2
+    - hosts: newhost
       roles:
-        - { role: ivansible.lin_enter }
+        - ivansible.lin_enter
 
 
 ## Testing
 
-    scripts/lin-enter.sh newhost
+    ./bin/lin-enter.sh newhost
 
 
 ## Implementation Details
 
 ### Port and user probing
 
-we:
+So, we:
 - use wait_for_connection
     because all other methods are subject to UNREACHABLE errors
 - override with ansible_ssh_user instead of ansible_user
@@ -170,4 +172,4 @@ MIT
 
 ## Author
 
-Created in 2018 by [IvanSible](https://github.com/ivansible)
+Created in 2018-2020 by [IvanSible](https://github.com/ivansible)

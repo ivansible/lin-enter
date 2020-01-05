@@ -13,11 +13,11 @@
   rescue:
     - name: fail instantly if error is not about non-unique id
       assert:
-        that: "desired_uid != 0"
+        that: desired_uid != 0
         msg:
           - "Error creating new user:"
           - "{{ user_data.msg | default(user_data) }}"
-        quiet: yes
+        quiet: true
 
     - name: find competing user entry
       getent:
@@ -35,12 +35,12 @@
 
     - name: old user id must be equal to desired user id
       assert:
-        that: "old_uid == desired_uid"
+        that: old_uid == desired_uid
         msg:
           - "Assertion error when creating user:"
           - "{{ old_uid }} != {{ desired_uid }}"
           - "{{ user_data.msg | default(user_data) }}"
-        quiet: yes
+        quiet: true
 
     - debug:
         msg:
@@ -71,7 +71,7 @@
     - name: find renamed or create new user with free id
       user:
         name: "{{ new_user }}"
-        non_unique: yes
+        non_unique: true
       register: user_data
 
     - block:
@@ -93,7 +93,7 @@
 - name: add user to the sudoers group
   user:
     name: "{{ new_user }}"
-    append: yes
+    append: true
     groups: sudo
 
 - name: update ansible user name (postpone full setup)

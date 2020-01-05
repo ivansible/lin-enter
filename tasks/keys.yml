@@ -3,7 +3,7 @@
   file:
     path: "{{ item }}"
     mode: 0600
-  when: item != '' # noqa 602
+  when: item != ''  # noqa 602
   loop:
     - "{{ new_keyfile }}"
     - "{{ linen_vagrant_keyfile }}"
@@ -13,10 +13,13 @@
   authorized_key:
     # ansible_user_id should have been updated to new user
     user: "{{ ansible_user_id }}"
-    key: "{{ lookup('pipe', 'ssh-keygen -y -f \"{{ item }}\"') }}"
+    key: "{{ lookup('pipe', keygen_cmd) }}"
     comment: "{{ new_keyfile | basename }}"
     state: present
-  when: item != '' # noqa 602
+  vars:
+    # deliberately use ';' in the pipe to ignore chmod errors
+    keygen_cmd: 'chmod 600 "{{ item }}"; ssh-keygen -y -f "{{ item }}"'
+  when: item != ''  # noqa 602
   loop:
     - "{{ new_keyfile }}"
 
@@ -31,9 +34,12 @@
       authorized_key:
         # ansible_user_id should have been updated to new user
         user: "{{ ansible_user_id }}"
-        key: "{{ lookup('pipe', 'ssh-keygen -y -f \"{{ item }}\"') }}"
+        key: "{{ lookup('pipe', keygen_cmd) }}"
         state: absent
-      when: item != '' # noqa 602
+      vars:
+        # deliberately use ';' in the pipe to ignore chmod errors
+        keygen_cmd: 'chmod 600 "{{ item }}"; ssh-keygen -y -f "{{ item }}"'
+      when: item != ''  # noqa 602
       loop:
         - "{{ linen_vagrant_keyfile }}"
       register: remove_keys

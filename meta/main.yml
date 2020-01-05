@@ -18,4 +18,6 @@ galaxy_info:
   galaxy_tags:
     - linux
     - ssh
+    - setup
+    - reboot
 ...
