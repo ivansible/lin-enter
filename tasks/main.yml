@@ -51,6 +51,7 @@
     - name: print detected settings
       debug:
         msg:
+          - "******** ATTENTION! ********"
           - "Detected settings:"
           - "- port: {{ found_port | default('-',true) }}"
           - "- user: {{ found_user | default('-',true) }}"
@@ -119,6 +120,7 @@
     - name: print new inventory host
       debug:
         msg:
+          - "******** SUCCESS! ********"
           - "Inventory entry for your new host:"
           - "{{ (orig_host | regex_search('^[0-9]')
                 | ternary('newhost' + orig_host | regex_search('\\.[0-9]+$')

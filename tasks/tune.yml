@@ -23,6 +23,7 @@
 - name: print new settings
   debug:
     msg:
+      - "******** ATTENTION! ********"
       - "New settings:"
       - "- port: {{ new_port }}"
       - "- user: {{ new_user }}"

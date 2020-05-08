@@ -15,7 +15,10 @@
     - name: apt install ufw with update (slower)
       apt:
         name: ufw
-        update: true
+        update_cache: true
+      register: apt_ufw_result
+      until: apt_ufw_result is successful
+      retries: 5
   when: linen_ufw |bool and not ufw_binary.stat.exists
   tags: linen_firewall
 
@@ -63,13 +66,23 @@
   when: linen_ufw |bool and linen_secure |bool
   tags: linen_firewall
 
+- name: pause before testing connection
+  wait_for:
+    timeout: "{{ linen_wait_timeout }}"
+  when: ssh_config is changed
+  tags: linen_firewall
+
 - name: test connection with new port
   ping:
+  register: ping_result
+  until: ping_result is successful
   when: ssh_config is changed
+  tags: linen_firewall
 
 - debug:
     msg:
-      - "Warning: old SSH port {{ found_port }} is left open!"
+      - "******** WARNING! ********"
+      - "Old SSH port {{ found_port }} is left open!"
   when: linen_secure |bool
         and ssh_config is changed
   tags: linen_firewall

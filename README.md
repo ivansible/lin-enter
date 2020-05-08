@@ -163,10 +163,12 @@ what if ansible_python_interpreter != /usr/bin/python
 
 Enter a Vultr box by root password, probing for custom SSH port and
 then switching to this port, create a new user (trying to make uid=1000),
-and finally install python2 and authorize my default private key:
+and finally install python2 and authorize my default private key.
+You can try IPv4 address, IPv6 address or DNS hostname after comma.
 
     export ANSIBLE_STRATEGY=linear
-    ivantory-role .lin-enter all -i ,10.1.2.3 -e linen_pass='secret' -e linen_user=myuser -e linen_port=8822 -e linen_keyfile=default -e linen_ufw=false -e gather=false
+    export ANSIBLE_SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PasswordAuthentication=yes -o PubkeyAuthentication=yes"
+    ivantory-role .lin-enter all -i ,10.1.2.3 -e linen_pass='secret' -e linen_user=myuser -e linen_port=8822 -e linen_keyfile=default -e linen_login_methods=4 -e gather=false
 
 Enter a new Vultr box initialized with SSH key:
 

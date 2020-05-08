@@ -19,7 +19,7 @@ linen_default_keyfile: ""
 linen_secure: true
 
 # allows to install ufw firewall
-linen_ufw: true
+linen_ufw: false
 
 # will attempt to adjust user to this uid
 linen_desired_uid: 1000
@@ -34,7 +34,7 @@ linen_conn_timeout: 3
 linen_port_timeout: 5
 linen_wait_timeout: 3
 linen_conn_retries: 3
-linen_pause_timeout: 5
+linen_pause_timeout: 8
 
 # default password for vagrant boxes
 linen_vagrant_password: vagrant

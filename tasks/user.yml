@@ -90,6 +90,13 @@
   tags: linen_create_or_rename_user
 
 
+- name: unlock new user account
+  lineinfile:
+    path: /etc/shadow
+    regexp: "^({{ new_user }}):!:(.*)$"
+    line: '\1:*:\2'
+    backrefs: true
+
 - name: add user to the sudoers group
   user:
     name: "{{ new_user }}"

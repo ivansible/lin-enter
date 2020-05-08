@@ -33,7 +33,10 @@
             name:
               - python
               - python3
-            update: true
+            update_cache: true
+          register: apt_python_result
+          until: apt_python_result is successful
+          retries: 5
       when: not (python2_binary.stat.exists and python3_binary.stat.exists)
 
     - name: switch connection to new python
